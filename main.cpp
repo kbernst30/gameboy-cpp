@@ -32,13 +32,14 @@
 
 #include <stdlib.h>
 #include <iostream>
+
+#include "gameboy.h"
 #include "utils.h"
 
 using namespace std;
 
 int main()
 {
-    Byte test = 0b11111111;
-    cout << test;
-    return 0;
+    Gameboy gb;
+    gb.run();
 }

@@ -1,6 +1,7 @@
 CC = g++
 CFLAGS = -std=c++0x
-DEPS = gameboy.o
+LDFLAGS = -lm -lSDL2
+DEPS = gameboy.o cpu.o mmu.o
 
 install: gameboy
 
@@ -13,5 +14,5 @@ clean:
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 gameboy: $(DEPS)
-	$(CC) $(CFLAGS) main.cpp -o gameboy -lSDL2
+	$(CC) $(LDFLAGS) $(CFLAGS) $(DEPS) main.cpp -o gameboy
 
