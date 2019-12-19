@@ -8,13 +8,16 @@
 class Gameboy {
 
     public:
-        Gameboy();
+        Gameboy(Mmu *_mmu, Cpu *_cpu) : cpu(_cpu), mmu(_mmu) {};
 
-        void run();
+        void run(Byte *cartridge);
 
     private:
-        Cpu cpu;
-        Mmu mmu;
+        Cpu *cpu;
+        Mmu *mmu;
+        Byte *cartridge;
+
+        void update();
 };
 
 #endif

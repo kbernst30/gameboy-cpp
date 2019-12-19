@@ -31,15 +31,47 @@
 // }
 
 #include <stdlib.h>
+#include <memory>
 #include <iostream>
+#include <fstream>
 
+#include "cpu.h"
 #include "gameboy.h"
+#include "mmu.h"
 #include "utils.h"
 
 using namespace std;
 
+void loadGame(Byte *cartridge, const char *rom)
+{
+    FILE *in;
+    in = fopen(rom, "rb");
+    fread(cartridge, 1, 0x200000, in);
+    fclose(in);
+}
+
 int main()
 {
-    Gameboy gb;
-    gb.run();
+    unique_ptr<Mmu> u_mmu = make_unique<Mmu>();
+    unique_ptr<Cpu> u_cpu = make_unique<Cpu>(u_mmu.get());
+
+    Gameboy gb(u_mmu.get(), u_cpu.get());
+
+    // A gameboy cartridge (ROM) has 0x200000 bytes of memory
+    // Not all of this memory is loaded into system memory at
+    // one given moment (necessarily). Only 0x8000 bytes are stored
+    // in memoery at a given time so store the ROM memory separately
+    Byte cartridge[0x200000];
+    memset(cartridge, 0, sizeof(cartridge));
+    loadGame(cartridge, "tetris.gb");
+
+    // This is just a debug loop to see if data was loaded into
+    // memory correctly
+    for (int i = 0; i < 10; i++) {
+        printf("0x%.2x\n", cartridge[i]);
+    }
+
+    gb.run(cartridge);
+
+    return 0;
 }
