@@ -101,6 +101,7 @@ void Mmu::writeMemory(Word address, Byte data)
     if (address < 0x8000)
     {
         cout << "0x" << std::hex << address << " accessed. Handle Banking..." << endl;
+        this->handleBanking(address, data);
     }
 
     // If we are writing to ECHO (E000-FDFF) we must write to working RAM (C000-CFFF) as well

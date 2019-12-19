@@ -66,9 +66,11 @@ int main()
     loadGame(cartridge, "tetris.gb");
 
     // This is just a debug loop to see if data was loaded into
-    // memory correctly
-    for (int i = 0; i < 10; i++) {
-        printf("0x%.2x\n", cartridge[i]);
+    // memory correctly - print out some instructions (start where PC would be)
+    for (int i = 0x100; i < 0x100 + 100; i += 2) {
+        // printf("0x%.2x\n", cartridge[i]);
+        Word address = (cartridge[i + 1] << 8) | cartridge[i];
+        cout << "0x" << std::hex << address << endl;
     }
 
     gb.run(cartridge);
