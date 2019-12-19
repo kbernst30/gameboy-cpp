@@ -34,4 +34,21 @@ const int SUBTRACT_BIT = 6;
 const int HALF_CARRY_BIT = 5;
 const int CARRY_BIT = 4;
 
+// Banking
+const int ROM_BANKING_MODE_ADDR = 0x147;
+const int RAM_BANK_COUNT_ADDR = 0x148;
+const int MAXIMUM_RAM_BANKS = 4;
+const int RAM_BANK_SIZE = 0x2000; // In bytes
+
+/* -------------------------Util Functions--------------------------- */
+
+template <typename T>
+bool isBitSet(T data, int position)
+{
+    // Return true if bit at position is
+    // set in data, false otherwise
+    T test = 1 << position;
+    return data & test ? true : false;
+}
+
 #endif

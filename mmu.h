@@ -30,20 +30,35 @@ class Mmu {
         // Reset MMU to initial state
         void reset();
 
-        void readMemory(Word address);
-
+        Byte readMemory(Word address);
         void writeMemory(Word address, Byte data);
 
     private:
+        Byte *cartridge;
         Byte memory[MEMORY_SIZE];
 
         // Memory banking modes
         bool mbc1 = false;
-        bool mbs2 = false;
+        bool mbc2 = false;
 
         // Current bank in switchable memory (0x4000 - 0x7FFF)
         // The default state will be 1
         int currentRomBank = 1;
+
+        // Initialize data for RAM, using an array with the size
+        // times the maximum number of banks we have
+        int ramBanks[MAXIMUM_RAM_BANKS * RAM_BANK_SIZE];
+        int currentRamBank = 0;
+
+        bool romBanking = true;
+        bool enableRam = false;
+
+        void handleBanking(Word address, Byte data);
+        void doEnableRamBanking(Word address, Byte data);
+        void doRomLoBankChange(Byte data);
+        void doRomHiBankChange(Byte data);
+        void doRamBankChange(Byte data);
+        void doChangeRomRamMode(Byte data);
 };
 
 #endif
