@@ -19,7 +19,7 @@ union Register {
     } parts;
 };
 
-const int MAX_CLOCK_CYCLES_PER_SECOND = 4194304;
+const int CLOCK_SPEED = 4194304; // cycles/sec
 const int FRAMES_PER_SECOND = 60;
 const int MAX_CYCLES_PER_FRAME = 69905; // Math.floor(4194304 / 60)
 
@@ -39,6 +39,11 @@ const int ROM_BANKING_MODE_ADDR = 0x147;
 const int RAM_BANK_COUNT_ADDR = 0x148;
 const int MAXIMUM_RAM_BANKS = 4;
 const int RAM_BANK_SIZE = 0x2000; // In bytes
+
+// Timers
+const int TIMER_ADDR = 0xFF05;
+const int TIMER_MODULATOR_ADDR = 0xFF06; // The value at this address is what the timer is set to upon overflow
+const int TIMER_CONTROLLER_ADDR = 0xFF07; // The value at this address specifies the timer count frequency
 
 /* -------------------------Util Functions--------------------------- */
 
