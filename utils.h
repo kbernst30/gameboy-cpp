@@ -92,7 +92,7 @@ bool resetBit(T *data, int position)
     // Unset bit at position in data
     T setter = 1 << position;
     setter = ~setter; // Bit wise negate to get a 0 in the appropriate pos
-    data &= setter;
+    *data &= setter;
 }
 
 #endif
