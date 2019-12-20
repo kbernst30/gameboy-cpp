@@ -56,6 +56,17 @@ const int TIMER_MODULATOR_ADDR = 0xFF06; // The value at this address is what th
 // This is the memory address that the controller is stored at
 const int TIMER_CONTROLLER_ADDR = 0xFF07;
 
+// Interrupts
+// There are 4 types of interrupts that can occur and the following are the bits
+// that are set in the enabled register and request register when they occur
+// Note: the lower the bit, the higher priority of the interrupt
+// Bit 0: V-Blank Interupt
+// Bit 1: LCD Interupt
+// Bit 2: Timer Interupt
+// Bit 4: Joypad Interupt
+const int INTERRUPT_ENABLED_REGISTER = 0xFFFF;
+const int INTERRUPT_REQUEST_ADDR = 0xFF0F;
+
 /* -------------------------Util Functions--------------------------- */
 
 template <typename T>
@@ -65,6 +76,23 @@ bool isBitSet(T data, int position)
     // set in data, false otherwise
     T test = 1 << position;
     return data & test ? true : false;
+}
+
+template <typename T>
+bool setBit(T *data, int position)
+{
+    // Set bit at position in data
+    T setter = 1 << position;
+    *data |= setter;
+}
+
+template <typename T>
+bool resetBit(T *data, int position)
+{
+    // Unset bit at position in data
+    T setter = 1 << position;
+    setter = ~setter; // Bit wise negate to get a 0 in the appropriate pos
+    data &= setter;
 }
 
 #endif

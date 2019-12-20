@@ -16,8 +16,19 @@ class Cpu {
         // Reset CPU to initial state
         void reset();
 
+        // Set value of the interrupt request address to include requested interrupt
+        void requestInterrupt(int bit);
+
+        bool isInterruptMaster();
+        void setInterruptMaster(bool val);
+
+        void serviceInterrupt(int interrupt);
+
     private:
         Mmu *mmu;
+
+        void pushWordTostack(Word word);
+        Word popWordFromStack();
 
         // There are 8 8-bit registers in the Gameboy
         // A, B, C, D, E, F, H and L. They are usually
@@ -29,13 +40,17 @@ class Cpu {
 
         // The Program Counter is 2 bytes and points to address
         // in memory of next operation to execute
-        Word progamCounter;
+        Word programCounter;
 
         // The Stack Pointer is 2 bytes and points to the top of
         // the stack in memory. We will use the Register type
         // because we often need to get hi and lo byte from the
         // stack
         Register stackPointer;
+
+        // The master interrupt enabled switch
+        // This is stored here as the CPU will need direct access to its control
+        bool interruptMaster = true;
 
 };
 

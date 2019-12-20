@@ -31,9 +31,9 @@ void Gameboy::update() {
     {
         cycles += this->cpu->execute();
 
-        // UpdateTimers(cycles)
+        this->updateTimers(cycles);
         // UpdateGraphics(cycles)
-        // DoInterrupts();
+        this->doInterrupts();
     }
 
     // RenderScreen();
@@ -109,9 +109,32 @@ void Gameboy::updateTimers(int cycles)
             Byte currentTimerValue = this->mmu->readMemory(TIMER_ADDR);
             if (currentTimerValue == 255) {
                 this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_MODULATOR_ADDR));
-                // this->requestInterrupt(2);
+                this->cpu->requestInterrupt(2);
             } else {
                 this->mmu->writeMemory(TIMER_ADDR, currentTimerValue + 1);
+            }
+        }
+    }
+}
+
+void Gameboy::doInterrupts()
+{
+    // Only take action on interrupts if the master switch is enabled
+    if (this->cpu->isInterruptMaster())
+    {
+        // Check for pending interrupts, and if they are enabled
+        Byte pendingInterrupts = this->mmu->readMemory(INTERRUPT_REQUEST_ADDR);
+        if (pendingInterrupts > 0)
+        {
+            // If we have any interrupts pending, check if they are enabled
+            Byte enabledInterrupts = this->mmu->readMemory(INTERRUPT_ENABLED_REGISTER);
+            for (int i = 0; i < 5; i++)
+            {
+                // This loop will ensure we can test every bit that an interrupt can be, in order of priority
+                if (isBitSet(pendingInterrupts, i) && isBitSet(enabledInterrupts, i))
+                {
+                    this->cpu->serviceInterrupt(i);
+                }
             }
         }
     }

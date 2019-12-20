@@ -26,6 +26,8 @@ class Gameboy {
 
         void update();
         void updateTimers(int cycles);
+
+        void doInterrupts();
 };
 
 #endif
