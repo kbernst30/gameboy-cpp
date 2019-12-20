@@ -17,7 +17,12 @@ class Gameboy {
         Mmu *mmu;
         Byte *cartridge;
 
+        int timerCounter = 1024; // initial value, frequency 4096 (4194304/4096)
+
+        bool isClockEnabled();
+
         void update();
+        void updateTimers(int cycles);
 };
 
 #endif

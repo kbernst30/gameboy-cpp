@@ -43,7 +43,17 @@ const int RAM_BANK_SIZE = 0x2000; // In bytes
 // Timers
 const int TIMER_ADDR = 0xFF05;
 const int TIMER_MODULATOR_ADDR = 0xFF06; // The value at this address is what the timer is set to upon overflow
-const int TIMER_CONTROLLER_ADDR = 0xFF07; // The value at this address specifies the timer count frequency
+
+// Timer Controller is 3-bit that controls timer and specifies frequency.
+// The 1st 2 bits describe frequency. Here is the mapping:
+// 00: 4096 Hz
+// 01: 262144 Hz
+// 10: 65536 Hz
+// 11: 16384 Hz
+//
+// The third bit specifies if the timer is enabled (1) or disabled (0)
+// This is the memory address that the controller is stored at
+const int TIMER_CONTROLLER_ADDR = 0xFF07;
 
 /* -------------------------Util Functions--------------------------- */
 

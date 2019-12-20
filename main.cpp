@@ -30,7 +30,9 @@
 //     return EXIT_SUCCESS;
 // }
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <memory>
 #include <iostream>
 #include <fstream>
