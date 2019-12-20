@@ -41,6 +41,7 @@ const int MAXIMUM_RAM_BANKS = 4;
 const int RAM_BANK_SIZE = 0x2000; // In bytes
 
 // Timers
+const int DIVIDER_REGISTER_ADDR = 0xFF04;
 const int TIMER_ADDR = 0xFF05;
 const int TIMER_MODULATOR_ADDR = 0xFF06; // The value at this address is what the timer is set to upon overflow
 

@@ -33,6 +33,11 @@ class Mmu {
         Byte readMemory(Word address);
         void writeMemory(Word address, Byte data);
 
+        bool isTimerFrequencyChanged();
+        void setTimerFrequencyChanged(bool val);
+
+        void increaseDividerRegister();
+
     private:
         Byte *cartridge;
         Byte memory[MEMORY_SIZE];
@@ -59,6 +64,9 @@ class Mmu {
         void doRomHiBankChange(Byte data);
         void doRamBankChange(Byte data);
         void doChangeRomRamMode(Byte data);
+
+        // Temp flag for noting if timer controller updated
+        bool timerFrequencyChanged = false;
 };
 
 #endif

@@ -46,9 +46,46 @@ bool Gameboy::isClockEnabled()
     return isBitSet(this->mmu->readMemory(TIMER_CONTROLLER_ADDR), 2);
 }
 
+void Gameboy::setClockFrequency()
+{
+    // This will get the first two bits of the timer controller address so we can
+    // set the correct frequency
+    Byte clockFrequency = this->mmu->readMemory(TIMER_CONTROLLER_ADDR) & 0x3;
+
+    // The timer counter should be set to the value of the speed of the clock
+    // divided by the frequency - therefore it will hit zero at the correct
+    // rate
+    switch (clockFrequency)
+    {
+        case 0x0: this->timerCounter = CLOCK_SPEED / 4096   ; break;
+        case 0x1: this->timerCounter = CLOCK_SPEED / 262144 ; break;
+        case 0x2: this->timerCounter = CLOCK_SPEED / 65536  ; break;
+        case 0x3: this->timerCounter = CLOCK_SPEED / 16384  ; break;
+    }
+}
+
+void Gameboy::updateDividerCounter(int cycles)
+{
+    // Incrememt the counter by number of cycles
+    this->dividerCounter += cycles;
+    if (this->dividerCounter >= 255)
+    {
+        // If we go over 255, reset to 0 and then increase the value of the divider register
+        this->dividerCounter = 0;
+        this->mmu->increaseDividerRegister();
+    }
+}
+
 void Gameboy::updateTimers(int cycles)
 {
-    // this->doDividerRegister(cycles);
+    this->updateDividerCounter(cycles);
+
+    // Before updating timers, we should check if the frequency just changed in
+    // memory. If it did, we can reset the timer
+    if (this->mmu->isTimerFrequencyChanged()) {
+        this->setClockFrequency();
+        this->mmu->setTimerFrequencyChanged(false);
+    }
 
     // The clock can be disabled so make sure it is enabled before updating anything
     if (isClockEnabled())
@@ -63,7 +100,7 @@ void Gameboy::updateTimers(int cycles)
         {
             // We need to reset the counter value so timer can increment again at the
             // correct frequency
-            // this->setClockFrequency();
+            this->setClockFrequency();
 
             // We need to account for overflow - if overflow then we can write the value
             // that is held in the modulator addr and request Timer Interrupt which is

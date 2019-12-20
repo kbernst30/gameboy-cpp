@@ -18,8 +18,11 @@ class Gameboy {
         Byte *cartridge;
 
         int timerCounter = 1024; // initial value, frequency 4096 (4194304/4096)
+        int dividerCounter = 0; // Counts up to 255
 
         bool isClockEnabled();
+        void setClockFrequency();
+        void updateDividerCounter(int cycles);
 
         void update();
         void updateTimers(int cycles);

@@ -123,6 +123,20 @@ void Mmu::writeMemory(Word address, Byte data)
         cout << "Attemped to write to restricted address 0x" << std::hex << address << endl;
     }
 
+    // We cannot write here directly - reset to 0
+    else if (address == DIVIDER_REGISTER_ADDR)
+    {
+        this->memory[address] = 0;
+    }
+
+    // If we are changing the data of the timer controller, then the timer itself will need
+    // to reset to count at the new frequency being set here
+    else if (address == TIMER_CONTROLLER_ADDR)
+    {
+        this->setTimerFrequencyChanged(true);
+        this->memory[address] = data;
+    }
+
     // Anywhere else is safe to write
     else
     {
@@ -262,4 +276,21 @@ void Mmu::doChangeRomRamMode(Byte data)
     {
         this->currentRamBank = 0;
     }
+}
+
+bool Mmu::isTimerFrequencyChanged()
+{
+    return this->timerFrequencyChanged;
+}
+
+void Mmu::setTimerFrequencyChanged(bool val)
+{
+    this->timerFrequencyChanged = val;
+}
+
+void Mmu::increaseDividerRegister()
+{
+    // We need this special method to increase the divider register because if a game
+    // tries to write to this address directly, it will actually reset the value to 0
+    this->memory[DIVIDER_REGISTER_ADDR]++;
 }
