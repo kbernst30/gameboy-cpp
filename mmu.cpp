@@ -124,7 +124,7 @@ void Mmu::writeMemory(Word address, Byte data)
     }
 
     // We cannot write here directly - reset to 0
-    else if (address == DIVIDER_REGISTER_ADDR)
+    else if (address == DIVIDER_REGISTER_ADDR || address == CURRENT_SCANLINE_ADDR)
     {
         this->memory[address] = 0;
     }
@@ -293,4 +293,18 @@ void Mmu::increaseDividerRegister()
     // We need this special method to increase the divider register because if a game
     // tries to write to this address directly, it will actually reset the value to 0
     this->memory[DIVIDER_REGISTER_ADDR]++;
+}
+
+void Mmu::updateCurrentScanline()
+{
+    // We need this special method to increase the current scanline
+    // as the game should not be writing here directly
+    this->memory[CURRENT_SCANLINE_ADDR]++;
+}
+
+void Mmu::resetCurrentScanline()
+{
+    // We need this special method to rest the current scanline
+    // as the game should not be writing here directly
+    this->memory[CURRENT_SCANLINE_ADDR] = 0;
 }

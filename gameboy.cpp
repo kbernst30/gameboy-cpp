@@ -32,7 +32,7 @@ void Gameboy::update() {
         cycles += this->cpu->execute();
 
         this->updateTimers(cycles);
-        // UpdateGraphics(cycles)
+        this->updateGraphics(cycles);
         this->doInterrupts();
     }
 
@@ -138,4 +138,145 @@ void Gameboy::doInterrupts()
             }
         }
     }
+}
+
+void Gameboy::updateGraphics(int cycles)
+{
+    this->setLcdStatus();
+
+    if (this->isLcdEnabled())
+    {
+        // We only update the counter if the LCD is enabled
+        this->scanlineCounter -= cycles;
+    }
+
+    if (this->scanlineCounter <= 0)
+    {
+        // If the coutner has coutned down (from 456) then it is time to 
+        // draw the next scanline
+        this->mmu->updateCurrentScanline();
+        Byte currentScanline = this->mmu->readMemory(CURRENT_SCANLINE_ADDR);
+
+        // We need to reset our coutner for the next scanline
+        this->scanlineCounter = 456;
+
+        if (currentScanline == 144)
+        {
+            // There are 144 visible scanlines (i.e. scanlines 0 - 143)
+            // If we are moving past that scanline, we are not drawing as
+            // it is an invisible scanline. This is the vertical blank period
+            // and we need an interrupt to handle it (which is bit 0 of the)
+            // the interrupt request register
+            this->cpu->requestInterrupt(0);
+        }
+        else if (currentScanline > MAX_SCANLINES)
+        {
+            // We have gone past the range of scanlines in this case, meaning we 
+            // need to reset back to 0
+            this->mmu->resetCurrentScanline();  
+        }
+        else
+        {
+            // We are within an appropriate scanline range (i.e. 0 - 143) which 
+            // means we can draw
+            // this->drawScanline()
+        }
+    }
+}
+
+bool Gameboy::isLcdEnabled()
+{
+    Byte lcdControl = this->mmu->readMemory(LCD_CONTROL_ADDR);
+    return isBitSet(lcdControl, 7); // Bit 7 specified is LCD is enabled
+}
+
+void Gameboy::setLcdStatus()
+{
+    Byte lcdStatus = this->mmu->readMemory(LCD_STATUS_ADDR);
+
+    if (!isLcdEnabled())
+    {
+        // If the LCD is disabled, the LCD Status should be in mode 1 (V-Blank)
+        // and we should ensure we reset the scaline
+        this->scanlineCounter = 456;
+        this->mmu->resetCurrentScanline();
+        
+        lcdStatus &= 0b11111100; // Turn off bits 0 and 1
+        setBit(&lcdStatus, 0); // Bit 0 should be set for mode 1
+        this->mmu->writeMemory(LCD_STATUS_ADDR, lcdStatus);
+        return;
+    }
+
+    Byte currentScanline = this->mmu->readMemory(CURRENT_SCANLINE_ADDR);
+    Byte lcdMode = lcdStatus & 0x3; // Get the first two bits to determine LCD Mode
+    Byte newLcdMode = 0;
+    bool shouldRequestInterrupt = false;
+
+    if (currentScanline >= 144)
+    {
+        // We are in one of our invisible scanlines, which is Vertical Blank period
+        // so we should set the mode to V-Blank (mode 1)
+        newLcdMode = 1;
+        setBit(&lcdStatus, 0);
+        resetBit(&lcdStatus, 1);
+        shouldRequestInterrupt = isBitSet(lcdStatus, 4); // Bit 4 specifies if V-Blank interrupt is enabled
+    }
+    else
+    {
+        // If we are drawing a current scanline, we should be cycling through the other LCD modes
+        // The cycle starts for a new scanline in mode 2 (Searching Sprite Atts), then after 80 cycles of 
+        // the 456 we are counting, we move to mode 3 (Transferring data to LCD driver). Mode 3 will take
+        // another 172 cycles, and then we move to mode 0 (H-Blank). When the counter has gone below 0,
+        // we will have moved to another scanline and we shuold start back at mode 2
+        if (this->scanlineCounter >= 456 - 80)
+        {
+            // We are in Mode 2 here
+            newLcdMode = 2;
+            resetBit(&lcdStatus, 0);
+            setBit(&lcdStatus, 1);
+            shouldRequestInterrupt = isBitSet(lcdStatus, 5); // Bit 5 specifies if Searchiing interrupt is enabled
+        }
+        else if (this->scanlineCounter < 456 - 80 && this->scanlineCounter >= 456 - 80 - 172)
+        {
+            // We are in mode 3 here
+            newLcdMode = 3;
+            setBit(&lcdStatus, 1);
+            setBit(&lcdStatus, 1);
+        }
+        else
+        {
+            // We are in mode 0 here
+            newLcdMode = 0;
+            resetBit(&lcdStatus, 0);
+            resetBit(&lcdStatus, 1);
+            shouldRequestInterrupt = isBitSet(lcdStatus, 3); // Bit 4 specifies if H-Blank interrupt is enabled
+        }
+    }
+
+    // If we are switching modes and we should request an interrupt, do it
+    if (newLcdMode != lcdMode && shouldRequestInterrupt)
+    {
+        // Interrupt bit 1 is for LCD interrupt
+        this->cpu->requestInterrupt(1); 
+    }
+
+    // If the current scanline is the same as the value in 0xFF45, then 
+    // we should set the coincidence flag. And appropriately request an 
+    // LCD interrupt IF it is enabled (bit 6)
+    if (currentScanline == this->mmu->readMemory(0xFF45))
+    {
+        // Set coincidence flag
+        setBit(&lcdStatus, 2);
+        if (isBitSet(lcdStatus, 6))
+        {
+            this->cpu->requestInterrupt(1);
+        }
+    }
+    else
+    {
+        resetBit(&lcdStatus, 2);
+    }
+    
+    // Finally, update the status now in memory
+    this->mmu->writeMemory(CURRENT_SCANLINE_ADDR, lcdStatus);
 }

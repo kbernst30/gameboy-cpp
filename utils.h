@@ -27,6 +27,7 @@ const int MEMORY_ROM_SIZE = 0x8000;
 const int MEMORY_SIZE = 0x10000;
 const int SCREEN_WIDTH = 160;
 const int SCREEN_HEIGHT = 144;
+const int MAX_SCANLINES = 153; // There are 9 invisible scanlines (past 144)
 
 // Flag Bits in Register F
 const int ZERO_BIT = 7;
@@ -66,6 +67,33 @@ const int TIMER_CONTROLLER_ADDR = 0xFF07;
 // Bit 4: Joypad Interupt
 const int INTERRUPT_ENABLED_REGISTER = 0xFFFF;
 const int INTERRUPT_REQUEST_ADDR = 0xFF0F;
+
+// LCD and Graphics
+const int CURRENT_SCANLINE_ADDR = 0xFF44;
+
+// This is the LCD control register
+// Bit 7 specifies if the LCD is currently enabled
+const int LCD_CONTROL_ADDR = 0xFF40;
+
+// This is where the status of the LCD is stored
+// The LCD has 4 modes and Bits 1 and 0 of the LCD status
+// specify which mode we are currently in:
+// 00: H-Blank Mode
+// 01: V-Blank mode
+// 10: Searching Sprites Atts
+// 11: Transferring Data to LCD driver
+// Bits 3, 4, and 5 specify if interrupts are enabled for the
+// LCD mode we are entering. Basically, this means if we move
+// into a specific LCD mode and the interrupt is enabled, we 
+// will request an LCD interrupt. The bits are as follows:
+// Bit 3: Mode 0 (H-Blank) interrupt enabled
+// Bit 4: Mode 1 (V-Blank) interrupt enabled
+// Bit 5: Mode 2 (Searching Sprites) interrupt enabled
+// Bit 2 is the "Coincidence" flag and is set to 1 if the current scanline
+// register (0xFF44) is the same value as the value in 0xFF45, otherwise 0
+// Bit 6 is the "Coincidence Interrupt Enabled" flag. If the coincidence
+// flag is set and so is this bit, then we will request a LCD interrupt
+const int LCD_STATUS_ADDR = 0xFF41;
 
 /* -------------------------Util Functions--------------------------- */
 

@@ -38,6 +38,10 @@ class Mmu {
 
         void increaseDividerRegister();
 
+        // These are convenicence functions for Scanline stuff
+        void updateCurrentScanline();
+        void resetCurrentScanline();
+
     private:
         Byte *cartridge;
         Byte memory[MEMORY_SIZE];
