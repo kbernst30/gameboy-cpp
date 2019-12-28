@@ -79,7 +79,7 @@ bool isBitSet(T data, int position)
 }
 
 template <typename T>
-bool setBit(T *data, int position)
+void setBit(T *data, int position)
 {
     // Set bit at position in data
     T setter = 1 << position;
@@ -87,7 +87,7 @@ bool setBit(T *data, int position)
 }
 
 template <typename T>
-bool resetBit(T *data, int position)
+void resetBit(T *data, int position)
 {
     // Unset bit at position in data
     T setter = 1 << position;
