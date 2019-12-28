@@ -129,6 +129,13 @@ void Mmu::writeMemory(Word address, Byte data)
         this->memory[address] = 0;
     }
 
+    // If we attempt to write to this address, this is the game launching a DMA (Direct Memory Access)
+    // which is a way of copying data to the Sprite RAM
+    else if (address == 0xFF46)
+    {
+        this->doDmaTransfer(data);
+    }
+
     // If we are changing the data of the timer controller, then the timer itself will need
     // to reset to count at the new frequency being set here
     else if (address == TIMER_CONTROLLER_ADDR)
@@ -307,4 +314,17 @@ void Mmu::resetCurrentScanline()
     // We need this special method to rest the current scanline
     // as the game should not be writing here directly
     this->memory[CURRENT_SCANLINE_ADDR] = 0;
+}
+
+void Mmu::doDmaTransfer(Byte data)
+{
+    // DMA will transfer sprite data into the RAM between address
+    // FE00 and FE9F (OAM), which is a total of 0xA0 (160) bytes
+    // The source address for the sprite data is represented by
+    // the data being "written" * 100
+    Word address = data << 8; // This is the same as multiplying by 100
+    for (int i = 0; i < 160; i++)
+    {
+        this->writeMemory(0xFE00 + i, this->readMemory(address + i));
+    }
 }

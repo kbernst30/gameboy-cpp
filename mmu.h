@@ -71,6 +71,8 @@ class Mmu {
 
         // Temp flag for noting if timer controller updated
         bool timerFrequencyChanged = false;
+
+        void doDmaTransfer(Byte data);
 };
 
 #endif
