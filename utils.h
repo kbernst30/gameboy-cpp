@@ -111,6 +111,14 @@ const int LCD_CONTROL_ADDR = 0xFF40;
 // flag is set and so is this bit, then we will request a LCD interrupt
 const int LCD_STATUS_ADDR = 0xFF41;
 
+// The screen is only 160x144 but there is 256x256 bytes of screen data
+// We only need to draw what should be visible. The following specify 
+// where to start drawing the background and window
+const int SCROLL_Y_ADDR = 0xFF42; // the Y pos of the background to start drawing the viewing area
+const int SCROLL_X_ADDR = 0xFF43; // the X pos of the background to start drawing the viewing area
+const int WINDOW_Y_ADDR = 0xFF4A; // the Y pos of the viewing area to start drawing the window
+const int WINDOW_X_ADDR = 0xFF4B; // the X pos-7 of the viewing area to start drawing the window
+
 /* -------------------------Util Functions--------------------------- */
 
 template <typename T>
