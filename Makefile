@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -std=c++14 -Wall -Wextra -pedantic-errors
 LDFLAGS = -lm -lSDL2
-DEPS = gameboy.o cpu.o mmu.o
+DEPS = gameboy.o display.o cpu.o mmu.o
 
 install: gameboy
 
