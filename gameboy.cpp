@@ -179,7 +179,7 @@ void Gameboy::updateGraphics(int cycles)
         {
             // We are within an appropriate scanline range (i.e. 0 - 143) which 
             // means we can draw
-            // this->drawScanline()
+            this->display->drawScanline();
         }
     }
 }

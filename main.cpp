@@ -38,6 +38,7 @@
 #include <fstream>
 
 #include "cpu.h"
+#include "display.h"
 #include "gameboy.h"
 #include "mmu.h"
 #include "utils.h"
@@ -56,8 +57,9 @@ int main()
 {
     unique_ptr<Mmu> u_mmu = make_unique<Mmu>();
     unique_ptr<Cpu> u_cpu = make_unique<Cpu>(u_mmu.get());
+    unique_ptr<Display> u_display = make_unique<Display>(u_mmu.get());
 
-    Gameboy gb(u_mmu.get(), u_cpu.get());
+    Gameboy gb(u_mmu.get(), u_cpu.get(), u_display.get());
 
     // A gameboy cartridge (ROM) has 0x200000 bytes of memory
     // Not all of this memory is loaded into system memory at

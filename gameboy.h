@@ -2,18 +2,20 @@
 #define __GAMEBOY_H_INCLUDED__
 
 #include "cpu.h"
+#include "display.h"
 #include "mmu.h"
 #include "utils.h"
 
 class Gameboy {
 
     public:
-        Gameboy(Mmu *_mmu, Cpu *_cpu) : cpu(_cpu), mmu(_mmu) {};
+        Gameboy(Mmu *_mmu, Cpu *_cpu, Display *_display) : cpu(_cpu), mmu(_mmu), display(_display) {};
 
         void run(Byte *cartridge);
 
     private:
         Cpu *cpu;
+        Display *display;
         Mmu *mmu;
         Byte *cartridge;
 
