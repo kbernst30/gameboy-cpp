@@ -73,6 +73,22 @@ const int CURRENT_SCANLINE_ADDR = 0xFF44;
 
 // This is the LCD control register
 // Bit 7 specifies if the LCD is currently enabled
+// Bit 6 is the Window Tile Map Display Select
+//   i.e. Where to read the tile identity number to draw onto the window
+//   0 = 0x9800 - 0x9BFF, 1 = 0x9C00 - 0x9FFF
+// Bit 5 specifies if the Window is currently enabled
+// Bit 4 is the Background and Window Tile Data Select
+//   i.e. Using the tile identity number, we can get the data of the tile
+//   that needs to be drawn. If this value is 0, the tile identity number is
+//   a signed byte, not unsigned
+//   0 = 0x8800 - 0x97FF, 1 = 0x8000 - 0x8FFF
+// Bit 3 is the Backgroudn Tile Map Display Select
+//   i.e. the same as Bit 6 but for the background instead of Window
+//   0 = 0x9800 - 0x9BFF, 1 = 0x9C00 - 0x9FFF
+// Bit 2 is the size of the sprites that need to be drawn
+//   0 = 8x8, 1 = 8x16
+// Bit 1 specifies if the Sprites are currently enabled
+// Bit 0 specified if the Background is currently enabled
 const int LCD_CONTROL_ADDR = 0xFF40;
 
 // This is where the status of the LCD is stored
