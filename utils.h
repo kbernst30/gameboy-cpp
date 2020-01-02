@@ -19,6 +19,13 @@ union Register {
     } parts;
 };
 
+// Color struct to hold RGB values
+struct Color {
+    int red;
+    int green;
+    int blue;
+};
+
 const int CLOCK_SPEED = 4194304; // cycles/sec
 const int FRAMES_PER_SECOND = 60;
 const int MAX_CYCLES_PER_FRAME = 69905; // Math.floor(4194304 / 60)
@@ -100,7 +107,7 @@ const int LCD_CONTROL_ADDR = 0xFF40;
 // 11: Transferring Data to LCD driver
 // Bits 3, 4, and 5 specify if interrupts are enabled for the
 // LCD mode we are entering. Basically, this means if we move
-// into a specific LCD mode and the interrupt is enabled, we 
+// into a specific LCD mode and the interrupt is enabled, we
 // will request an LCD interrupt. The bits are as follows:
 // Bit 3: Mode 0 (H-Blank) interrupt enabled
 // Bit 4: Mode 1 (V-Blank) interrupt enabled
@@ -112,12 +119,28 @@ const int LCD_CONTROL_ADDR = 0xFF40;
 const int LCD_STATUS_ADDR = 0xFF41;
 
 // The screen is only 160x144 but there is 256x256 bytes of screen data
-// We only need to draw what should be visible. The following specify 
+// We only need to draw what should be visible. The following specify
 // where to start drawing the background and window
 const int SCROLL_Y_ADDR = 0xFF42; // the Y pos of the background to start drawing the viewing area
 const int SCROLL_X_ADDR = 0xFF43; // the X pos of the background to start drawing the viewing area
 const int WINDOW_Y_ADDR = 0xFF4A; // the Y pos of the viewing area to start drawing the window
 const int WINDOW_X_ADDR = 0xFF4B; // the X pos-7 of the viewing area to start drawing the window
+
+// This is where the "palettes" are stored and we use it to determine a color based on 2 bits
+// of data (i.e. 10 or 11) will be cross referenced with the paettes to get the correct color
+// This works by taking those two bits and looking at the corresponding two bits in the palette.
+// These mapping are as follows:
+//  11 - Bits 7 and 6
+//  10 - Bits 5 and 4
+//  01 - Bits 3 and 2
+//  00 - Bits 1 and 0
+// The colors for the Gameboy are simple (grey scale) and the bits in the palette we are examining
+// specify the color. The colors are as follows:
+//  00 = White
+//  01 = Light Gray
+//  10 = Dark Gray
+//  11 = Black
+const int BACKGROUND_COLOR_PALETTE_ADDR = 0xFF47;
 
 /* -------------------------Util Functions--------------------------- */
 
@@ -145,6 +168,13 @@ void resetBit(T *data, int position)
     T setter = 1 << position;
     setter = ~setter; // Bit wise negate to get a 0 in the appropriate pos
     *data &= setter;
+}
+
+template <typename T>
+int getBitVal(T data, int position)
+{
+    T test = 1 << position;
+    return data & test;
 }
 
 #endif

@@ -20,6 +20,8 @@ class Display {
         void renderBackground(Byte lcdControl);
         void renderSprites();
 
+        Color getColor(int colorData, Word paletteAddr);
+
 };
 
 #endif
