@@ -18,7 +18,7 @@ class Display {
         Byte screen[SCREEN_WIDTH][SCREEN_HEIGHT][3];
 
         void renderBackground(Byte lcdControl);
-        void renderSprites();
+        void renderSprites(Byte lcdControl);
 
         Color getColor(int colorData, Word paletteAddr);
 

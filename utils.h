@@ -89,7 +89,7 @@ const int CURRENT_SCANLINE_ADDR = 0xFF44;
 //   that needs to be drawn. If this value is 0, the tile identity number is
 //   a signed byte, not unsigned
 //   0 = 0x8800 - 0x97FF, 1 = 0x8000 - 0x8FFF
-// Bit 3 is the Backgroudn Tile Map Display Select
+// Bit 3 is the Background Tile Map Display Select
 //   i.e. the same as Bit 6 but for the background instead of Window
 //   0 = 0x9800 - 0x9BFF, 1 = 0x9C00 - 0x9FFF
 // Bit 2 is the size of the sprites that need to be drawn
@@ -141,6 +141,12 @@ const int WINDOW_X_ADDR = 0xFF4B; // the X pos-7 of the viewing area to start dr
 //  10 = Dark Gray
 //  11 = Black
 const int BACKGROUND_COLOR_PALETTE_ADDR = 0xFF47;
+const int SPRITE_COLOR_PALETTE_1_ADDR = 0xFF48;
+const int SPRITE_COLOR_PALETTE_2_ADDR = 0xFF49;
+
+// This is the starting point of the sprite attribute table. We need to look at 4 bytes per sprite in
+// the memory range starting from here
+const int SPRITE_ATTRIBUTE_TABLE_ADDR = 0xFE00;
 
 /* -------------------------Util Functions--------------------------- */
 

@@ -18,7 +18,7 @@ void Display::drawScanline()
     {
         // If Bit 1 is set, that means the sprites are enabled,
         // and we should draw them
-        this->renderSprites();
+        this->renderSprites(lcdControl);
     }
 }
 
@@ -153,11 +153,11 @@ void Display::renderBackground(Byte lcdControl)
         Word tileLocation = tileData;
         if (isUnsigned)
         {
-            tileLocation += tileLocation * 16;
+            tileLocation += tileIdentificationNumber * 16;
         }
         else
         {
-            tileLocation += (tileLocation + 128) * 16;
+            tileLocation += (tileIdentificationNumber + 128) * 16;
         }
 
         // There are 8 pixels in the tile height, so we need to get the appropriate line
@@ -213,9 +213,113 @@ void Display::renderBackground(Byte lcdControl)
 
 }
 
-void Display::renderSprites()
+void Display::renderSprites(Byte lcdControl)
 {
+    // Unlike background, tile identifier for sprites is ALWAYS unsigned
+    // and tile data is always in memory 0x8000 - 0x8FFFF. There are 40 tiles
+    // here and we need to look at them all and find where they should be rendered
+    // There is a sprite attribute table in memory 0xFE00 - 0xFE9F. Here, we can
+    // look at 4 bytes per sprite. These bytes are as follows:
+    //  Byte 0: Sprite Y position - 16
+    //  Byte 1: Sprite X position - 8
+    //  Byte 2: Pattern number (i.e. sprite identifier to look up in memory)
+    //  Byte 3: Attributes
+    //
+    // The attributes of the sprite (byte 3) breakdown as follows:
+    //  Bit 7: Sprite to Background priority - render above or below background
+    //  Bit 6: Y Flip
+    //  Bit 5: X Flip
+    //  Bit 4: Palette Number - More than one color palette for sprites
+    //  Bit 3-0: Not used
 
+    // A tall sprite is 8x16, whereas a small sprite is 8x8
+    bool isTallSprite = isBitSet(lcdControl, 2);
+
+    // There are 40 sprites, so check them all
+    for (int sprite = 0; sprite < 40; sprite++)
+    {
+        int memoryIdx = sprite * 4; // 4 bytes per sprite, so get proper starting point
+        Byte yPosition = this->mmu->readMemory(SPRITE_ATTRIBUTE_TABLE_ADDR + memoryIdx) - 16;
+        Byte xPosition = this->mmu->readMemory(SPRITE_ATTRIBUTE_TABLE_ADDR + memoryIdx + 1) - 8;
+        Byte tileLocation = this->mmu->readMemory(SPRITE_ATTRIBUTE_TABLE_ADDR + memoryIdx + 2);
+        Byte attributes = this->mmu->readMemory(SPRITE_ATTRIBUTE_TABLE_ADDR + memoryIdx + 3);
+
+        bool yFlip = isBitSet(attributes, 6);
+        bool xFlip = isBitSet(attributes, 5);
+
+        int currentScanline = this->mmu->readMemory(CURRENT_SCANLINE_ADDR);
+
+        // We should only draw this sprite if it intercepts with the scanline that we are currently drawing
+        int spriteHeight = isTallSprite ? 16 : 8;
+        if (currentScanline >= yPosition && currentScanline < yPosition + spriteHeight)
+        {
+            int line = currentScanline - yPosition;
+
+            // If we have Y flip, read the sprite in backwards to achieve the flip
+            if (yFlip)
+            {
+                line = (line - spriteHeight) * -1;
+            }
+
+            // Remember each tile (sprite or background) has two bytes of memory
+            // So do this to get the appropriate address
+            line *= 2;
+
+            // Get the address to find the sprite data
+            Word dataAddress = 0x8000 + (tileLocation * 16) + line;
+
+            // This is the tile data. Occupying the two bytes in memory
+            Byte data1 = this->mmu->readMemory(dataAddress + line);
+            Byte data2 = this->mmu->readMemory(dataAddress + line + 1);
+
+            // With background we had the pixel as we were looping through every horizontal pixel in
+            // the scanline. Here we need to get the horizontal pixel from the sprite. Check them
+            // right to left to read color data properly (similar to background)
+            for (int tilePixel = 7; tilePixel >= 0; tilePixel--)
+            {
+                int colorBit = tilePixel;
+
+                // If we have X Flip, read the sprite in backwards to achieve the flip
+                if (xFlip)
+                {
+                    colorBit = (colorBit - 7) * -1;
+                }
+
+                // Now we need to combine the bits of the data bytes as specified above
+                int colorData = getBitVal(data2, colorBit);
+                colorData <<= 1;
+                colorData |= getBitVal(data1, colorBit);
+
+                Word paletteAddr = isBitSet(attributes, 4) ? SPRITE_COLOR_PALETTE_2_ADDR : SPRITE_COLOR_PALETTE_1_ADDR;
+                Color color = getColor(colorData, paletteAddr);
+
+                // Sprite don't really have the "WHITE" color - they are transparent here, so we shouldn't set the data
+                // at all
+                if (color.red == 0xFF && color.green == 0XFF && color.blue == 0xFF)
+                {
+                    continue;
+                }
+
+                // TODO check background priority???
+
+                int xPixel = 0 - tilePixel;
+                xPixel += 7;
+                int pixel = xPosition + xPixel;
+
+                if (currentScanline < 0 || currentScanline >= SCREEN_HEIGHT || pixel < 0 || pixel >= SCREEN_WIDTH)
+                {
+                    // If we are outside the visible screen do not set data in the screen data as it will
+                    // error
+                    continue;
+                }
+
+                // Set the proper pixel in the screen data
+                screen[pixel][currentScanline][0] = color.red;
+                screen[pixel][currentScanline][1] = color.green;
+                screen[pixel][currentScanline][2] = color.blue;
+            }
+        }
+    }
 }
 
 Color Display::getColor(int colorData, Word paletteAddr)
