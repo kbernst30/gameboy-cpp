@@ -208,8 +208,14 @@ int Cpu::doOpcode(Byte opcode)
         // 8-Bit Load (LD A, (n)) - Load value at address 0xFF00 + value n into A
         case 0xF0: this->af.parts.hi = this->mmu->readMemory(0xFF00 + this->getNextByte()); return 12; // LD A, (n) = 12 cycles
 
-        // 16 Bit Loads
-        case 0x01: this->do16BitLoad(&(this->bc.reg)); return 12; // LD BC, nn - 12 cycles
+        // 16 Bit Load (LD n, nn) - Load immediate 16 bit value into n
+        case 0x01: this->do16BitLoad(&(this->bc.reg));           return 12; // LD BC, nn - 12 cycles
+        case 0x11: this->do16BitLoad(&(this->de.reg));           return 12; // LD BC, nn - 12 cycles
+        case 0x21: this->do16BitLoad(&(this->hl.reg));           return 12; // LD BC, nn - 12 cycles
+        case 0x31: this->do16BitLoad(&(this->stackPointer.reg)); return 12; // LD BC, nn - 12 cycles
+
+        // 16 Bit Load - (LD SP, HL) - Load HL into the Stack Pointer
+        case 0xF9: this->stackPointer = this->hl; return 8; // LD SP, HL - 8 cycles
     }
 }
 
@@ -232,14 +238,12 @@ Byte Cpu::getNextByte()
 
 void Cpu::do8BitLoad(Byte *reg)
 {
-    Byte data = this->mmu->readMemory(this->programCounter++);
-    *reg = data;
+    *reg = getNextByte();
 }
 
 void Cpu::do8BitLoadToMemory(Word address)
 {
-    Byte data = this->mmu->readMemory(this->programCounter++);
-    this->mmu->writeMemory(address, data);
+    this->mmu->writeMemory(address, getNextByte());
 }
 
 void Cpu::do16BitLoad(Word *reg)
