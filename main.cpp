@@ -81,7 +81,12 @@ int main()
 
     gb.run(cartridge);
 
-    Display *display = u_display.get();
-    display->render();
+    // Display *display = u_display.get();
+    // display->render();
+
+    unsigned char i = 255;
+    printf("%d\n", i);
+    printf("%d\n", (char) i);
+
     return EXIT_SUCCESS;
 }
