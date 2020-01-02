@@ -30,6 +30,16 @@ class Cpu {
         void pushWordTostack(Word word);
         Word popWordFromStack();
 
+        int doOpcode(Byte opcode);
+
+        // Op helpers
+        Word getNextWord();
+        Byte getNextByte();
+        void do8BitLoad(Byte *reg);
+        void do8BitLoadToMemory(Word address);
+        void do16BitLoad(Word *reg);
+        void doIncrement(Word *reg);
+
         // There are 8 8-bit registers in the Gameboy
         // A, B, C, D, E, F, H and L. They are usually
         // referred to in pairs, so we represent them as such

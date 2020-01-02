@@ -77,7 +77,11 @@ int main()
         cout << "0x" << std::hex << address << endl;
     }
 
+    // TODO we need to deal with the joypad
+
     gb.run(cartridge);
 
-    return 0;
+    Display *display = u_display.get();
+    display->render();
+    return EXIT_SUCCESS;
 }

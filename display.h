@@ -9,6 +9,7 @@ class Display {
     public:
         Display(Mmu *_mmu) : mmu(_mmu) {};
 
+        void render();
         void drawScanline();
 
     private:
