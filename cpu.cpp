@@ -216,6 +216,38 @@ int Cpu::doOpcode(Byte opcode)
 
         // 16 Bit Load - (LD SP, HL) - Load HL into the Stack Pointer
         case 0xF9: this->stackPointer = this->hl; return 8; // LD SP, HL - 8 cycles
+
+        // 16 Bit Load - (LD HL SP+n) - Load Stack pointer plus one byte signed immediate value into HL - 12 cycles
+        // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
+        case 0xF8:
+            SignedByte offset = (SignedByte) this->getNextByte();
+            unsigned int value = this->stackPointer.reg + offset;
+
+            resetBit(&(this->af.parts.lo), ZERO_BIT);
+            resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+            // If we are overflowing the max for a Word (0xFFFF) then set carry bit, otherwise reset
+            if (value > 0xFFFF)
+            {
+                setBit(&(this->af.parts.lo), CARRY_BIT);
+            }
+            else
+            {
+                resetBit(&(this->af.parts.lo), CARRY_BIT);
+            }
+
+            // If we are overflowing lower nibble to upper nibble, then set half carry flag, otherwise reset
+            if ((this->stackPointer.reg & 0xF) + (offset & 0xF) > 0xF)
+            {
+                setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            }
+            else
+            {
+                resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            }
+
+            this->hl.reg = (Word) (value & 0xFFFF);
+            return 12;
     }
 }
 
