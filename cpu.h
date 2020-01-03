@@ -72,6 +72,11 @@ class Cpu {
         // This is stored here as the CPU will need direct access to its control
         bool interruptMaster = true;
 
+        // Used by instructions DI and EI - we need to know if have a pending
+        // interrupt enable/disable
+        bool willDisableInterrupts = false;
+        bool willEnableInterrupts = false;
+
         // Specify if the CPU is halted or not
         bool halted = false;
 

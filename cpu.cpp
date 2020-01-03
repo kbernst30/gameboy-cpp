@@ -2,9 +2,35 @@
 #include "utils.h"
 
 int Cpu::execute() {
-    Byte opcode = this->mmu->readMemory(this->programCounter);
-    this->programCounter++;
-    return this->doOpcode(opcode);
+    int cycles;
+
+    if (!this->halted)
+    {
+        Byte opcode = this->mmu->readMemory(this->programCounter);
+        this->programCounter++;
+        cycles = this->doOpcode(opcode);
+    }
+    else
+    {
+        cycles = 4;
+    }
+
+    // We need to see based on pending flags if we should enable/disable
+    // interrupts. This should only happen if the instruction before the
+    // last one executed was DI (0xF3) or EI (0xFB)
+    Byte lastOpcode = this->mmu->readMemory(this->programCounter - 2);
+    if (lastOpcode == 0xF3 && this->willDisableInterrupts)
+    {
+        this->willDisableInterrupts = false;
+        this->interruptMaster = false;
+    }
+    else if (lastOpcode == 0xFB && this->willEnableInterrupts)
+    {
+        this->willEnableInterrupts = false;
+        this->interruptMaster = true;
+    }
+
+    return cycles;
 }
 
 void Cpu::reset() {
@@ -18,6 +44,12 @@ void Cpu::reset() {
 
     this->programCounter = 0x100;
     this->stackPointer.reg = 0xFFFE;
+
+    this->interruptMaster = true;
+    this->willDisableInterrupts = false;
+    this->willEnableInterrupts = false;
+
+    this->halted = false;
 }
 
 void Cpu::requestInterrupt(int bit)
@@ -42,6 +74,9 @@ void Cpu::setInterruptMaster(bool val)
 
 void Cpu::serviceInterrupt(int interrupt)
 {
+    // Unhalt the CPU
+    this->halted = false;
+
     // Disable the master interrupt
     this->setInterruptMaster(false);
 
@@ -504,6 +539,17 @@ int Cpu::doOpcode(Byte opcode)
             return 4;
         }
 
+        // Misc - (HALT) - Powers down CPU until interrupt occurs
+        case 0x76: this->halted = true; return 4; // HALT - 4 cycles
+
+        // Misc - (STOP) - Halt CPU and LCD until button pressed
+        case 0x10: return 4; // STOP - 4 cycles - // TODO should I halt here or use different flag?
+
+        // Misc - (DI) - Disable interrupts after the NEXT instruction
+        case 0xF3: this->willDisableInterrupts = true; return 4; // DI - 4 cycles
+
+        // Misc - (EI) - Enable interrupts after the NEXT instruction
+        case 0xFB: this->willEnableInterrupts = true; return 4; // DI - 4 cycles
     }
 }
 
