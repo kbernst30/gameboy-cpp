@@ -50,7 +50,9 @@ class Cpu {
         void do8BitRegisterDecrement(Byte *reg);
         void do8BitRegisterSwap(Byte *reg);
         void do8BitRegisterRotateLeft(Byte *reg, bool throughCarry=false);
+        void do8BitRegisterShiftLeft(Byte *reg);
         void do8BitRegisterRotateRight(Byte *reg, bool throughCarry=false);
+        void do8BitRegisterShiftRight(Byte *reg, bool maintainMsb=false);
 
         // There are 8 8-bit registers in the Gameboy
         // A, B, C, D, E, F, H and L. They are usually

@@ -656,6 +656,57 @@ int Cpu::doExtendedOpcode(Byte opcode)
             return 16;
         }
 
+        // Shift - (SLA n) - Shift n left, Bit 7 to Carry flag
+        case 0x27: this->do8BitRegisterShiftLeft(&(this->af.parts.hi)); return 8; // SLA A - 8 cycles
+        case 0x20: this->do8BitRegisterShiftLeft(&(this->bc.parts.hi)); return 8; // SLA B - 8 cycles
+        case 0x21: this->do8BitRegisterShiftLeft(&(this->bc.parts.lo)); return 8; // SLA C - 8 cycles
+        case 0x22: this->do8BitRegisterShiftLeft(&(this->de.parts.hi)); return 8; // SLA D - 8 cycles
+        case 0x23: this->do8BitRegisterShiftLeft(&(this->de.parts.lo)); return 8; // SLA E - 8 cycles
+        case 0x24: this->do8BitRegisterShiftLeft(&(this->hl.parts.hi)); return 8; // SLA H - 8 cycles
+        case 0x25: this->do8BitRegisterShiftLeft(&(this->hl.parts.lo)); return 8; // SLA L - 8 cycles
+        // RLC (HL) - 16 cycles
+        case 0x26:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterShiftLeft(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
+        // Shift - (SRA n) - Shift n right, maintaining MSB, Bit 0 to Carry flag
+        case 0x2F: this->do8BitRegisterShiftRight(&(this->af.parts.hi), true); return 8; // SRA A - 8 cycles
+        case 0x28: this->do8BitRegisterShiftRight(&(this->bc.parts.hi), true); return 8; // SRA B - 8 cycles
+        case 0x29: this->do8BitRegisterShiftRight(&(this->bc.parts.lo), true); return 8; // SRA C - 8 cycles
+        case 0x2A: this->do8BitRegisterShiftRight(&(this->de.parts.hi), true); return 8; // SRA D - 8 cycles
+        case 0x2B: this->do8BitRegisterShiftRight(&(this->de.parts.lo), true); return 8; // SRA E - 8 cycles
+        case 0x2C: this->do8BitRegisterShiftRight(&(this->hl.parts.hi), true); return 8; // SRA H - 8 cycles
+        case 0x2D: this->do8BitRegisterShiftRight(&(this->hl.parts.lo), true); return 8; // SRA L - 8 cycles
+        // SRA (HL) - 16 cycles
+        case 0x2E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterShiftRight(&temp, true);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
+        // Shift - (SRL n) - Shift n right, Bit 0 to Carry flag
+        case 0x3F: this->do8BitRegisterShiftRight(&(this->af.parts.hi)); return 8; // SRL A - 8 cycles
+        case 0x38: this->do8BitRegisterShiftRight(&(this->bc.parts.hi)); return 8; // SRL B - 8 cycles
+        case 0x39: this->do8BitRegisterShiftRight(&(this->bc.parts.lo)); return 8; // SRL C - 8 cycles
+        case 0x3A: this->do8BitRegisterShiftRight(&(this->de.parts.hi)); return 8; // SRL D - 8 cycles
+        case 0x3B: this->do8BitRegisterShiftRight(&(this->de.parts.lo)); return 8; // SRL E - 8 cycles
+        case 0x3C: this->do8BitRegisterShiftRight(&(this->hl.parts.hi)); return 8; // SRL H - 8 cycles
+        case 0x3D: this->do8BitRegisterShiftRight(&(this->hl.parts.lo)); return 8; // SRL L - 8 cycles
+        // SRL (HL) - 16 cycles
+        case 0x3E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterShiftRight(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
     }
 }
 
@@ -984,6 +1035,25 @@ void Cpu::do8BitRegisterRotateLeft(Byte *reg, bool throughCarry)
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
 }
 
+void Cpu::do8BitRegisterShiftLeft(Byte *reg)
+{
+    // Shift the bits of register reg left. Bit 7 should be set in the
+    // carry flag.
+    // Subtract flag should be reset
+    // Half carry flag should be reset
+    // Zero flag should be set if result is zero
+    int bit = getBitVal(reg, 7);
+    *reg <<= 1;
+
+    if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
+    else resetBit(&(this->af.parts.lo), CARRY_BIT);
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+}
+
 void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
 {
     // Rotate the bits of register reg right. Bit 0 should be set in the
@@ -994,6 +1064,32 @@ void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
     int bit = getBitVal(reg, 0);
     *reg >>= 1;
     *reg |= ((throughCarry ? getBitVal(this->af.parts.lo, CARRY_BIT) : bit) << 7);
+
+    if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
+    else resetBit(&(this->af.parts.lo), CARRY_BIT);
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+}
+
+void Cpu::do8BitRegisterShiftRight(Byte *reg, bool maintainMsb)
+{
+    // Shift the bits of register reg right. Bit 0 should be set in the
+    // carry flag. If we maintain the most significant bit, ensure
+    // it has old value after shift
+    // Subtract flag should be reset
+    // Half carry flag should be reset
+    // Zero flag should be set if result is zero
+    int bit = getBitVal(reg, 0);
+    int msb = getBitVal(reg, 7);
+    *reg >>= 1;
+
+    if (maintainMsb)
+    {
+        *reg |= (msb << 7);
+    }
 
     if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
     else resetBit(&(this->af.parts.lo), CARRY_BIT);
