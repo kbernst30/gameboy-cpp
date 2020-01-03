@@ -562,6 +562,19 @@ int Cpu::doOpcode(Byte opcode)
 
         // Rotate - (RRA) - Rotate A right, through Carry flag
         case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); return 4; // RRA - 4 cycles
+
+        // Jump - (JP nn) - Jump to address nn, immediate two byte value
+        case 0xC3: this->programCounter = this->getNextWord(); return 12; // JP nn - 12 cycles
+
+        // Jump - (JP cc, nn) - Jump to address nn, immediate two byte value, if cc is true
+        // cc = NZ => Z flag is reset
+        // cc = Z => Z flag is set
+        // cc = NC => C flag is reset
+        // cc = C => C flag is set
+        case 0xC2: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP NZ, nn - 12 cycles
+        case 0xCA: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;   return 12; // JP Z, nn - 12 cycles
+        case 0xD2: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2; return 12; // JP NC, nn - 12 cycles
+        case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP NZ, nn - 12 cycles
     }
 }
 
