@@ -707,6 +707,71 @@ int Cpu::doExtendedOpcode(Byte opcode)
             return 16;
         }
 
+        // Bit - (BIT b, r) - Test bit b in register r
+        case 0x40: this->doTestBit(this->bc.parts.hi, 0);                   return 8;  // BIT 0, B - 8 cycles
+        case 0x41: this->doTestBit(this->bc.parts.lo, 0);                   return 8;  // BIT 0, C - 8 cycles
+        case 0x42: this->doTestBit(this->de.parts.hi, 0);                   return 8;  // BIT 0, D - 8 cycles
+        case 0x43: this->doTestBit(this->de.parts.lo, 0);                   return 8;  // BIT 0, E - 8 cycles
+        case 0x44: this->doTestBit(this->hl.parts.hi, 0);                   return 8;  // BIT 0, H - 8 cycles
+        case 0x45: this->doTestBit(this->hl.parts.lo, 0);                   return 8;  // BIT 0, L - 8 cycles
+        case 0x46: this->doTestBit(this->mmu->readMemory(this->hl.reg), 0); return 16; // BIT 0, (HL) - 8 cycles
+        case 0x47: this->doTestBit(this->af.parts.hi, 0);                   return 8;  // BIT 0, A - 8 cycles
+        case 0x48: this->doTestBit(this->bc.parts.hi, 1);                   return 8;  // BIT 1, B - 8 cycles
+        case 0x49: this->doTestBit(this->bc.parts.lo, 1);                   return 8;  // BIT 1, C - 8 cycles
+        case 0x4A: this->doTestBit(this->de.parts.hi, 1);                   return 8;  // BIT 1, D - 8 cycles
+        case 0x4B: this->doTestBit(this->de.parts.lo, 1);                   return 8;  // BIT 1, E - 8 cycles
+        case 0x4C: this->doTestBit(this->hl.parts.hi, 1);                   return 8;  // BIT 1, H - 8 cycles
+        case 0x4D: this->doTestBit(this->hl.parts.lo, 1);                   return 8;  // BIT 1, L - 8 cycles
+        case 0x4E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 1); return 16; // BIT 1, (HL) - 8 cycles
+        case 0x4F: this->doTestBit(this->af.parts.hi, 1);                   return 8;  // BIT 1, A - 8 cycles
+        case 0x50: this->doTestBit(this->bc.parts.hi, 2);                   return 8;  // BIT 2, B - 8 cycles
+        case 0x51: this->doTestBit(this->bc.parts.lo, 2);                   return 8;  // BIT 2, C - 8 cycles
+        case 0x52: this->doTestBit(this->de.parts.hi, 2);                   return 8;  // BIT 2, D - 8 cycles
+        case 0x53: this->doTestBit(this->de.parts.lo, 2);                   return 8;  // BIT 2, E - 8 cycles
+        case 0x54: this->doTestBit(this->hl.parts.hi, 2);                   return 8;  // BIT 2, H - 8 cycles
+        case 0x55: this->doTestBit(this->hl.parts.lo, 2);                   return 8;  // BIT 2, L - 8 cycles
+        case 0x56: this->doTestBit(this->mmu->readMemory(this->hl.reg), 2); return 16; // BIT 2, (HL) - 8 cycles
+        case 0x57: this->doTestBit(this->af.parts.hi, 2);                   return 8;  // BIT 2, A - 8 cycles
+        case 0x58: this->doTestBit(this->bc.parts.hi, 3);                   return 8;  // BIT 3, B - 8 cycles
+        case 0x59: this->doTestBit(this->bc.parts.lo, 3);                   return 8;  // BIT 3, C - 8 cycles
+        case 0x5A: this->doTestBit(this->de.parts.hi, 3);                   return 8;  // BIT 3, D - 8 cycles
+        case 0x5B: this->doTestBit(this->de.parts.lo, 3);                   return 8;  // BIT 3, E - 8 cycles
+        case 0x5C: this->doTestBit(this->hl.parts.hi, 3);                   return 8;  // BIT 3, H - 8 cycles
+        case 0x5D: this->doTestBit(this->hl.parts.lo, 3);                   return 8;  // BIT 3, L - 8 cycles
+        case 0x5E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 3); return 16; // BIT 3, (HL) - 8 cycles
+        case 0x5F: this->doTestBit(this->af.parts.hi, 3);                   return 8;  // BIT 3, A - 8 cycles
+        case 0x60: this->doTestBit(this->bc.parts.hi, 4);                   return 8;  // BIT 4, B - 8 cycles
+        case 0x61: this->doTestBit(this->bc.parts.lo, 4);                   return 8;  // BIT 4, C - 8 cycles
+        case 0x62: this->doTestBit(this->de.parts.hi, 4);                   return 8;  // BIT 4, D - 8 cycles
+        case 0x63: this->doTestBit(this->de.parts.lo, 4);                   return 8;  // BIT 4, E - 8 cycles
+        case 0x64: this->doTestBit(this->hl.parts.hi, 4);                   return 8;  // BIT 4, H - 8 cycles
+        case 0x65: this->doTestBit(this->hl.parts.lo, 4);                   return 8;  // BIT 4, L - 8 cycles
+        case 0x66: this->doTestBit(this->mmu->readMemory(this->hl.reg), 4); return 16; // BIT 4, (HL) - 8 cycles
+        case 0x67: this->doTestBit(this->af.parts.hi, 4);                   return 8;  // BIT 4, A - 8 cycles
+        case 0x68: this->doTestBit(this->bc.parts.hi, 5);                   return 8;  // BIT 5, B - 8 cycles
+        case 0x69: this->doTestBit(this->bc.parts.lo, 5);                   return 8;  // BIT 5, C - 8 cycles
+        case 0x6A: this->doTestBit(this->de.parts.hi, 5);                   return 8;  // BIT 5, D - 8 cycles
+        case 0x6B: this->doTestBit(this->de.parts.lo, 5);                   return 8;  // BIT 5, E - 8 cycles
+        case 0x6C: this->doTestBit(this->hl.parts.hi, 5);                   return 8;  // BIT 5, H - 8 cycles
+        case 0x6D: this->doTestBit(this->hl.parts.lo, 5);                   return 8;  // BIT 5, L - 8 cycles
+        case 0x6E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 5); return 16; // BIT 5, (HL) - 8 cycles
+        case 0x6F: this->doTestBit(this->af.parts.hi, 5);                   return 8;  // BIT 5, A - 8 cycles
+        case 0x70: this->doTestBit(this->bc.parts.hi, 6);                   return 8;  // BIT 6, B - 8 cycles
+        case 0x71: this->doTestBit(this->bc.parts.lo, 6);                   return 8;  // BIT 6, C - 8 cycles
+        case 0x72: this->doTestBit(this->de.parts.hi, 6);                   return 8;  // BIT 6, D - 8 cycles
+        case 0x73: this->doTestBit(this->de.parts.lo, 6);                   return 8;  // BIT 6, E - 8 cycles
+        case 0x74: this->doTestBit(this->hl.parts.hi, 6);                   return 8;  // BIT 6, H - 8 cycles
+        case 0x75: this->doTestBit(this->hl.parts.lo, 6);                   return 8;  // BIT 6, L - 8 cycles
+        case 0x76: this->doTestBit(this->mmu->readMemory(this->hl.reg), 6); return 16; // BIT 6, (HL) - 8 cycles
+        case 0x77: this->doTestBit(this->af.parts.hi, 6);                   return 8;  // BIT 6, A - 8 cycles
+        case 0x78: this->doTestBit(this->bc.parts.hi, 7);                   return 8;  // BIT 7, B - 8 cycles
+        case 0x79: this->doTestBit(this->bc.parts.lo, 7);                   return 8;  // BIT 7, C - 8 cycles
+        case 0x7A: this->doTestBit(this->de.parts.hi, 7);                   return 8;  // BIT 7, D - 8 cycles
+        case 0x7B: this->doTestBit(this->de.parts.lo, 7);                   return 8;  // BIT 7, E - 8 cycles
+        case 0x7C: this->doTestBit(this->hl.parts.hi, 7);                   return 8;  // BIT 7, H - 8 cycles
+        case 0x7D: this->doTestBit(this->hl.parts.lo, 7);                   return 8;  // BIT 7, L - 8 cycles
+        case 0x7E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 7); return 16; // BIT 7, (HL) - 8 cycles
+        case 0x7F: this->doTestBit(this->af.parts.hi, 7);                   return 8;  // BIT 7, A - 8 cycles
     }
 }
 
@@ -1098,4 +1163,24 @@ void Cpu::do8BitRegisterShiftRight(Byte *reg, bool maintainMsb)
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+}
+
+void Cpu::doTestBit(Byte value, int bit)
+{
+    // Test bit in provided byte
+    // If 0, set zero flag, 1 otherwise
+    // Reset Subtract flag
+    // Set half carry flag
+    if (isBitSet(value, bit))
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+
+    setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 }
