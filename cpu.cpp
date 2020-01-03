@@ -296,6 +296,133 @@ int Cpu::doOpcode(Byte opcode)
         case 0x9D: this->do8BitRegisterSub(&(this->af.parts.hi), this->hl.parts.lo, true);                   return 4; // SBC A, L - 4 cycles
         case 0x9E: this->do8BitRegisterSub(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg), true); return 8; // SBC A, (HL) - 8 cycles
         case 0xDE: this->do8BitRegisterSub(&(this->af.parts.hi), this->getNextByte(), true);                 return 8; // SBC A, n - 8 cycles
+
+        // 8 Bit ALU - (AND n) - AND n with A
+        case 0xA7: this->do8BitRegisterAnd(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // AND A - 4 cycles
+        case 0xA0: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // AND B - 4 cycles
+        case 0xA1: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // AND C - 4 cycles
+        case 0xA2: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // AND D - 4 cycles
+        case 0xA3: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // AND E - 4 cycles
+        case 0xA4: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // AND H - 4 cycles
+        case 0xA5: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // AND L - 4 cycles
+        case 0xA6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // AND (HL) - 8 cycles
+        case 0xE6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->getNextByte());                 return 8; // AND n - 8 cycles
+
+        // 8 Bit ALU - (OR n) - OR n with A
+        case 0xB7: this->do8BitRegisterAnd(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // OR A - 4 cycles
+        case 0xB0: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // OR B - 4 cycles
+        case 0xB1: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // OR C - 4 cycles
+        case 0xB2: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // OR D - 4 cycles
+        case 0xB3: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // OR E - 4 cycles
+        case 0xB4: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // OR H - 4 cycles
+        case 0xB5: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // OR L - 4 cycles
+        case 0xB6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // OR (HL) - 8 cycles
+        case 0xF6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->getNextByte());                 return 8; // OR n - 8 cycles
+
+        // 8 Bit ALU - (XOR n) - XOR n with A
+        case 0xAF: this->do8BitRegisterXor(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // XOR A - 4 cycles
+        case 0xA8: this->do8BitRegisterXor(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // XOR B - 4 cycles
+        case 0xA9: this->do8BitRegisterXor(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // XOR C - 4 cycles
+        case 0xAA: this->do8BitRegisterXor(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // XOR D - 4 cycles
+        case 0xAB: this->do8BitRegisterXor(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // XOR E - 4 cycles
+        case 0xAC: this->do8BitRegisterXor(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // XOR H - 4 cycles
+        case 0xAD: this->do8BitRegisterXor(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // XOR L - 4 cycles
+        case 0xAE: this->do8BitRegisterXor(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // XOR (HL) - 8 cycles
+        case 0xEE: this->do8BitRegisterXor(&(this->af.parts.hi), this->getNextByte());                 return 8; // XOR n - 8 cycles
+
+        // 8 Bit ALU - (CP n) - Compare A with n - basically a subtract where we throw away value
+        case 0xBF: this->do8BitRegisterCompare(this->af.parts.hi, this->af.parts.hi);                   return 4; // CP A - 4 cycles
+        case 0xB8: this->do8BitRegisterCompare(this->af.parts.hi, this->bc.parts.hi);                   return 4; // CP B - 4 cycles
+        case 0xB9: this->do8BitRegisterCompare(this->af.parts.hi, this->bc.parts.lo);                   return 4; // CP C - 4 cycles
+        case 0xBA: this->do8BitRegisterCompare(this->af.parts.hi, this->de.parts.hi);                   return 4; // CP D - 4 cycles
+        case 0xBB: this->do8BitRegisterCompare(this->af.parts.hi, this->de.parts.lo);                   return 4; // CP E - 4 cycles
+        case 0xBC: this->do8BitRegisterCompare(this->af.parts.hi, this->hl.parts.hi);                   return 4; // CP H - 4 cycles
+        case 0xBD: this->do8BitRegisterCompare(this->af.parts.hi, this->hl.parts.lo);                   return 4; // CP L - 4 cycles
+        case 0xBE: this->do8BitRegisterCompare(this->af.parts.hi, this->mmu->readMemory(this->hl.reg)); return 8; // CP (HL) - 8 cycles
+        case 0xFE: this->do8BitRegisterCompare(this->af.parts.hi, this->getNextByte());                 return 8; // CP n - 8 cycles
+
+        // 8 Bit ALU - (INC n) - Increment register n
+        case 0x3C: this->do8BitRegisterIncrement(&(this->af.parts.hi)); return 4; // INC A - 4 cycles
+        case 0x04: this->do8BitRegisterIncrement(&(this->bc.parts.hi)); return 4; // INC B - 4 cycles
+        case 0x0C: this->do8BitRegisterIncrement(&(this->bc.parts.lo)); return 4; // INC C - 4 cycles
+        case 0x14: this->do8BitRegisterIncrement(&(this->de.parts.hi)); return 4; // INC D - 4 cycles
+        case 0x1C: this->do8BitRegisterIncrement(&(this->de.parts.lo)); return 4; // INC E - 4 cycles
+        case 0x24: this->do8BitRegisterIncrement(&(this->hl.parts.hi)); return 4; // INC H - 4 cycles
+        case 0x2C: this->do8BitRegisterIncrement(&(this->hl.parts.lo)); return 4; // INC L - 4 cycles
+        // INC (HL) - 12 cycles
+        case 0x34: {
+            Byte temp = this->mmu->readMemory(this->hl.reg);;
+            this->do8BitRegisterIncrement(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 12;
+        }
+
+        // 8 Bit ALU - (DEC n) - Decrement register n
+        case 0x3D: this->do8BitRegisterDecrement(&(this->af.parts.hi)); return 4; // DEC A - 4 cycles
+        case 0x05: this->do8BitRegisterDecrement(&(this->bc.parts.hi)); return 4; // DEC B - 4 cycles
+        case 0x0D: this->do8BitRegisterDecrement(&(this->bc.parts.lo)); return 4; // DEC C - 4 cycles
+        case 0x15: this->do8BitRegisterDecrement(&(this->de.parts.hi)); return 4; // DEC D - 4 cycles
+        case 0x1D: this->do8BitRegisterDecrement(&(this->de.parts.lo)); return 4; // DEC E - 4 cycles
+        case 0x25: this->do8BitRegisterDecrement(&(this->hl.parts.hi)); return 4; // DEC H - 4 cycles
+        case 0x2D: this->do8BitRegisterDecrement(&(this->hl.parts.lo)); return 4; // DEC L - 4 cycles
+        // DEC (HL) - 12 cycles
+        case 0x35: {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterDecrement(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 12;
+        }
+
+        // 16 Bit Arithmetic - (ADD HL, n) - Add n to HL
+        case 0x09: this->do16BitRegisterAdd(&(this->hl.reg), this->bc.reg);           return 8; // ADD HL, BC - 8 cycles
+        case 0x19: this->do16BitRegisterAdd(&(this->hl.reg), this->de.reg);           return 8; // ADD HL, DE - 8 cycles
+        case 0x29: this->do16BitRegisterAdd(&(this->hl.reg), this->hl.reg);           return 8; // ADD HL, HL - 8 cycles
+        case 0x39: this->do16BitRegisterAdd(&(this->hl.reg), this->stackPointer.reg); return 8; // ADD HL, SP - 8 cycles
+
+        // 16 Bit Arithmetic - (ADD SP, n) - Add n to SP - 16 cycles
+        // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
+        case 0xE8: {
+            SignedByte offset = (SignedByte) this->getNextByte();
+            unsigned int value = this->stackPointer.reg + offset;
+
+            resetBit(&(this->af.parts.lo), ZERO_BIT);
+            resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+            // If we are overflowing the max for a Word (0xFFFF) then set carry bit, otherwise reset
+            if (value > 0xFFFF)
+            {
+                setBit(&(this->af.parts.lo), CARRY_BIT);
+            }
+            else
+            {
+                resetBit(&(this->af.parts.lo), CARRY_BIT);
+            }
+
+            // If we are overflowing lower nibble to upper nibble, then set half carry flag, otherwise reset
+            if ((this->stackPointer.reg & 0xF) + (value & 0xF) > 0xF)
+            {
+                setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            }
+            else
+            {
+                resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            }
+
+            this->stackPointer.reg = (Word) (value & 0xFFFF);
+            return 16;
+        }
+
+        // 16 Bit Arithmethc - (INC nn) - Increment register pair nn
+        case 0x03: this->bc.reg++;           return 8; // INC BC = 8 cycles
+        case 0x13: this->de.reg++;           return 8; // INC DE = 8 cycles
+        case 0x23: this->hl.reg++;           return 8; // INC HL = 8 cycles
+        case 0x33: this->stackPointer.reg++; return 8; // INC SP = 8 cycles
+
+        // 16 Bit Arithmethc - (DEC nn) - Decrement register pair nn
+        case 0x0B: this->bc.reg--;           return 8; // DEC BC = 8 cycles
+        case 0x1B: this->de.reg--;           return 8; // DEC DE = 8 cycles
+        case 0x2B: this->hl.reg--;           return 8; // DEC HL = 8 cycles
+        case 0x3B: this->stackPointer.reg--; return 8; // DEC SP = 8 cycles
     }
 }
 
@@ -365,7 +492,7 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
 
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
-    if (result == 0)
+    if ((Byte) (result & 0xFF) == 0)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
@@ -382,6 +509,32 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
     }
 
     *reg = (Byte) (result & 0xFF);
+}
+
+void Cpu::do16BitRegisterAdd(Word *reg, Byte value)
+{
+    // This should perform a 16 bit add operation and store
+    // the result in register reg
+    // The Zero flag is not affected
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be set if we carry from bit 11
+    // The Carry flag should be set if we carry from but 15
+
+    int result = *reg + value;
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (result > 0xFFFF)
+    {
+        setBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
+    Word lowerTwelve = *reg & 0xFFF;
+    if (lowerTwelve + (value & 0xFFF) > 0xFFF)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
+    *reg = (Word) (result & 0xFFFF);
 }
 
 void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
@@ -406,7 +559,7 @@ void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
 
-    if (*reg > toSubtract)
+    if (*reg < toSubtract)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
     }
@@ -420,7 +573,141 @@ void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
     *reg = (Byte) ((*reg - toSubtract) & 0xFF);
 }
 
-void Cpu::doIncrement(Word *reg)
+void Cpu::do8BitRegisterAnd(Byte *reg, Byte value)
 {
+    // This should perform an 8 bit logical AND operation and store
+    // the result in register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be set
+    // The Carry flag should be reset
 
+    *reg &= value;
+    if (*reg == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+}
+
+void Cpu::do8BitRegisterOr(Byte *reg, Byte value)
+{
+    // This should perform an 8 bit logical OR operation and store
+    // the result in register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be reset
+    // The Carry flag should be reset
+
+    *reg |= value;
+    if (*reg == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+}
+
+void Cpu::do8BitRegisterXor(Byte *reg, Byte value)
+{
+    // This should perform an 8 bit logical XOR operation and store
+    // the result in register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be reset
+    // The Carry flag should be reset
+
+    *reg ^= value;
+    if (*reg == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+}
+
+void Cpu::do8BitRegisterCompare(Byte source, Byte value)
+{
+    // This should perform an 8 bit compare operation
+    // The Zero flag should be set if the comparison is zero (source == value)
+    // THe Subtract flag should be set
+    // The Half-Carry flag should be set if we do not borrow from bit 4
+    // The Carry flag should be set if we do not borrow (source < value)
+
+    setBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (source == value)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    if (source < value)
+    {
+        setBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
+    Word lowerNibble = source & 0xF;
+    if ((value & 0xF) < lowerNibble)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+}
+
+void Cpu::do8BitRegisterIncrement(Byte *reg)
+{
+    // This should perform an 8 bit increment of register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be set if we carry from bit 3
+    // The Carry flag is not affected
+
+    int result = *reg + 1;
+
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if ((Byte) (result & 0xFF) == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    Word lowerNibble = *reg & 0xF;
+    if (lowerNibble + 1 > 0xF)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
+    *reg = (Byte) (result & 0xFF);
+}
+
+void Cpu::do8BitRegisterDecrement(Byte *reg)
+{
+    // This should perform an 8 bit decrement of register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be set
+    // The Half-Carry flag should be set if we do not borrow from bit 4
+    // The Carry flag is not affected
+
+    Byte result = *reg - 1;
+
+    setBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (result == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    Word lowerNibble = *reg & 0xF;
+    if (1 < lowerNibble)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
+    *reg = (Byte) (result & 0xFF);
 }
