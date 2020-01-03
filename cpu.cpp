@@ -67,23 +67,6 @@ void Cpu::serviceInterrupt(int interrupt)
     }
 }
 
-void Cpu::pushWordTostack(Word word)
-{
-    // Push to stack in order of endianess (little) so lower byte will be the first
-    // one we pop
-    Byte hi = word >> 8;
-    Byte lo = word & 0xFF;
-    this->mmu->writeMemory(--this->stackPointer.reg, hi);
-    this->mmu->writeMemory(--this->stackPointer.reg, lo);
-}
-
-Word Cpu::popWordFromStack()
-{
-    Byte lo = this->mmu->readMemory(this->stackPointer.reg++);
-    Byte hi = this->mmu->readMemory(this->stackPointer.reg++);
-    return (hi << 8) | lo;
-}
-
 int Cpu::doOpcode(Byte opcode)
 {
     // This is where we execute the operation we fetched. Each operation
@@ -219,7 +202,7 @@ int Cpu::doOpcode(Byte opcode)
 
         // 16 Bit Load - (LD HL SP+n) - Load Stack pointer plus one byte signed immediate value into HL - 12 cycles
         // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
-        case 0xF8:
+        case 0xF8: {
             SignedByte offset = (SignedByte) this->getNextByte();
             unsigned int value = this->stackPointer.reg + offset;
 
@@ -248,7 +231,89 @@ int Cpu::doOpcode(Byte opcode)
 
             this->hl.reg = (Word) (value & 0xFFFF);
             return 12;
+        }
+
+        // 16 Bit Load - (LD (nn), SP) - Put Stack pointer into memory at nn - 20 cycles
+        case 0x08: {
+            Word address = this->getNextWord();
+            this->mmu->writeMemory(address, this->stackPointer.parts.lo);
+            this->mmu->writeMemory(address + 1, this->stackPointer.parts.hi);
+            return 20;
+        }
+
+        // 16 Bit Load - (PUSH nn) - Push register pair onto the stack and decrememnt stack pointer twice
+        case 0xF5: this->pushWordTostack(this->af.reg); return 16; // PUSH AF - 16 cycles
+        case 0xC5: this->pushWordTostack(this->bc.reg); return 16; // PUSH BC - 16 cycles
+        case 0xD5: this->pushWordTostack(this->de.reg); return 16; // PUSH DE - 16 cycles
+        case 0xE5: this->pushWordTostack(this->hl.reg); return 16; // PUSH HL - 16 cycles
+
+        // 16 Bit Load - (POP nn) - Pop two bytes off of the stack into register pair nn
+        case 0xF1: this->af.reg = this->popWordFromStack(); return 12; // POP AF - 12 cycles
+        case 0xC1: this->bc.reg = this->popWordFromStack(); return 12; // POP BC - 12 cycles
+        case 0xD1: this->de.reg = this->popWordFromStack(); return 12; // POP DE - 12 cycles
+        case 0xE1: this->hl.reg = this->popWordFromStack(); return 12; // POP HL - 12 cycles
+
+        // 8 Bit ALU - (ADD A, n) - Add n to A
+        case 0x87: this->do8BitRegisterAdd(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // ADD A, A - 4 cycles
+        case 0x80: this->do8BitRegisterAdd(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // ADD A, B - 4 cycles
+        case 0x81: this->do8BitRegisterAdd(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // ADD A, C - 4 cycles
+        case 0x82: this->do8BitRegisterAdd(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // ADD A, D - 4 cycles
+        case 0x83: this->do8BitRegisterAdd(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // ADD A, E - 4 cycles
+        case 0x84: this->do8BitRegisterAdd(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // ADD A, H - 4 cycles
+        case 0x85: this->do8BitRegisterAdd(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // ADD A, L - 4 cycles
+        case 0x86: this->do8BitRegisterAdd(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // ADD A, (HL) - 8 cycles
+        case 0xC6: this->do8BitRegisterAdd(&(this->af.parts.hi), this->getNextByte());                 return 8; // ADD A, n - 8 cycles
+
+        // 8 Bit ALU - (ADC A, n) - Add n + carry flag to A
+        case 0x8F: this->do8BitRegisterAdd(&(this->af.parts.hi), this->af.parts.hi, true);                   return 4; // ADC A, A - 4 cycles
+        case 0x88: this->do8BitRegisterAdd(&(this->af.parts.hi), this->bc.parts.hi, true);                   return 4; // ADC A, B - 4 cycles
+        case 0x89: this->do8BitRegisterAdd(&(this->af.parts.hi), this->bc.parts.lo, true);                   return 4; // ADC A, C - 4 cycles
+        case 0x8A: this->do8BitRegisterAdd(&(this->af.parts.hi), this->de.parts.hi, true);                   return 4; // ADC A, D - 4 cycles
+        case 0x8B: this->do8BitRegisterAdd(&(this->af.parts.hi), this->de.parts.lo, true);                   return 4; // ADC A, E - 4 cycles
+        case 0x8C: this->do8BitRegisterAdd(&(this->af.parts.hi), this->hl.parts.hi, true);                   return 4; // ADC A, H - 4 cycles
+        case 0x8D: this->do8BitRegisterAdd(&(this->af.parts.hi), this->hl.parts.lo, true);                   return 4; // ADC A, L - 4 cycles
+        case 0x8E: this->do8BitRegisterAdd(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg), true); return 8; // ADC A, (HL) - 8 cycles
+        case 0xCE: this->do8BitRegisterAdd(&(this->af.parts.hi), this->getNextByte(), true);                 return 8; // ADC A, n - 8 cycles
+
+        // 8 Bit ALU - (SUB n) - Subtract n from A
+        case 0x97: this->do8BitRegisterSub(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // SUB A - 4 cycles
+        case 0x90: this->do8BitRegisterSub(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // SUB B - 4 cycles
+        case 0x91: this->do8BitRegisterSub(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // SUB C - 4 cycles
+        case 0x92: this->do8BitRegisterSub(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // SUB D - 4 cycles
+        case 0x93: this->do8BitRegisterSub(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // SUB E - 4 cycles
+        case 0x94: this->do8BitRegisterSub(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // SUB H - 4 cycles
+        case 0x95: this->do8BitRegisterSub(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // SUB L - 4 cycles
+        case 0x96: this->do8BitRegisterSub(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // SUB (HL) - 8 cycles
+        case 0xD6: this->do8BitRegisterSub(&(this->af.parts.hi), this->getNextByte());                 return 8; // SUB n - 8 cycles
+
+        // 8 Bit ALU - (SBC A, n) - Subtract n + carry flag from A
+        case 0x9F: this->do8BitRegisterSub(&(this->af.parts.hi), this->af.parts.hi, true);                   return 4; // SBC A, A - 4 cycles
+        case 0x98: this->do8BitRegisterSub(&(this->af.parts.hi), this->bc.parts.hi, true);                   return 4; // SBC A, B - 4 cycles
+        case 0x99: this->do8BitRegisterSub(&(this->af.parts.hi), this->bc.parts.lo, true);                   return 4; // SBC A, C - 4 cycles
+        case 0x9A: this->do8BitRegisterSub(&(this->af.parts.hi), this->de.parts.hi, true);                   return 4; // SBC A, D - 4 cycles
+        case 0x9B: this->do8BitRegisterSub(&(this->af.parts.hi), this->de.parts.lo, true);                   return 4; // SBC A, E - 4 cycles
+        case 0x9C: this->do8BitRegisterSub(&(this->af.parts.hi), this->hl.parts.hi, true);                   return 4; // SBC A, H - 4 cycles
+        case 0x9D: this->do8BitRegisterSub(&(this->af.parts.hi), this->hl.parts.lo, true);                   return 4; // SBC A, L - 4 cycles
+        case 0x9E: this->do8BitRegisterSub(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg), true); return 8; // SBC A, (HL) - 8 cycles
+        case 0xDE: this->do8BitRegisterSub(&(this->af.parts.hi), this->getNextByte(), true);                 return 8; // SBC A, n - 8 cycles
     }
+}
+
+void Cpu::pushWordTostack(Word word)
+{
+    // Push to stack in order of endianess (little) so lower byte will be the first
+    // one we pop
+    Byte hi = word >> 8;
+    Byte lo = word & 0xFF;
+    this->mmu->writeMemory(--this->stackPointer.reg, hi);
+    this->mmu->writeMemory(--this->stackPointer.reg, lo);
+}
+
+Word Cpu::popWordFromStack()
+{
+    Byte lo = this->mmu->readMemory(this->stackPointer.reg++);
+    Byte hi = this->mmu->readMemory(this->stackPointer.reg++);
+    return (hi << 8) | lo;
 }
 
 Word Cpu::getNextWord()
@@ -281,6 +346,78 @@ void Cpu::do8BitLoadToMemory(Word address)
 void Cpu::do16BitLoad(Word *reg)
 {
     *reg = getNextWord();
+}
+
+void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
+{
+    // This should perform an 8 bit add operation and store
+    // the result in register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be reset
+    // The Half-Carry flag should be set if we carry from bit 3
+    // The Carry flag should be set if we carry from but 7
+
+    int result = *reg + value;
+    if (useCarry && isBitSet(this->af.parts.lo, CARRY_BIT))
+    {
+        result++;
+    }
+
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (result == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    if (result > 0xFF)
+    {
+        setBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
+    Word lowerNibble = *reg & 0xF;
+    if (lowerNibble + (value & 0xF) > 0xF)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
+    *reg = (Byte) (result & 0xFF);
+}
+
+void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
+{
+    // This should perform an 8 bit subtract operation and store
+    // the result in register reg
+    // The Zero flag should be set if the result is zero
+    // THe Subtract flag should be set
+    // The Half-Carry flag should be set if we do not borrow from bit 4
+    // The Carry flag should be set if we do not borrow
+
+    Byte toSubtract = value;
+    if (useCarry && isBitSet(this->af.parts.lo, CARRY_BIT))
+    {
+        toSubtract--;
+    }
+
+    setBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (*reg - toSubtract == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    if (*reg > toSubtract)
+    {
+        setBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
+    Word lowerNibble = *reg & 0xF;
+    if ((toSubtract & 0xF) < lowerNibble)
+    {
+        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
+    *reg = (Byte) ((*reg - toSubtract) & 0xFF);
 }
 
 void Cpu::doIncrement(Word *reg)

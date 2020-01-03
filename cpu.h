@@ -38,6 +38,8 @@ class Cpu {
         void do8BitLoad(Byte *reg);
         void do8BitLoadToMemory(Word address);
         void do16BitLoad(Word *reg);
+        void do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry=false);
+        void do8BitRegisterSub(Byte *reg, Byte value, bool useCarry=false);
         void doIncrement(Word *reg);
 
         // There are 8 8-bit registers in the Gameboy
