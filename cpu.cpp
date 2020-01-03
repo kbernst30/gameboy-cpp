@@ -1087,7 +1087,7 @@ void Cpu::do8BitRegisterRotateLeft(Byte *reg, bool throughCarry)
     // Subtract flag should be reset
     // Half carry flag should be reset
     // Zero flag should be set if result is zero
-    int bit = getBitVal(reg, 7);
+    int bit = getBitVal(*reg, 7);
     *reg <<= 1;
     *reg |= throughCarry ? getBitVal(this->af.parts.lo, CARRY_BIT) : bit;
 
@@ -1107,7 +1107,7 @@ void Cpu::do8BitRegisterShiftLeft(Byte *reg)
     // Subtract flag should be reset
     // Half carry flag should be reset
     // Zero flag should be set if result is zero
-    int bit = getBitVal(reg, 7);
+    int bit = getBitVal(*reg, 7);
     *reg <<= 1;
 
     if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
@@ -1126,7 +1126,7 @@ void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
     // Subtract flag should be reset
     // Half carry flag should be reset
     // Zero flag should be set if result is zero
-    int bit = getBitVal(reg, 0);
+    int bit = getBitVal(*reg, 0);
     *reg >>= 1;
     *reg |= ((throughCarry ? getBitVal(this->af.parts.lo, CARRY_BIT) : bit) << 7);
 
@@ -1147,8 +1147,8 @@ void Cpu::do8BitRegisterShiftRight(Byte *reg, bool maintainMsb)
     // Subtract flag should be reset
     // Half carry flag should be reset
     // Zero flag should be set if result is zero
-    int bit = getBitVal(reg, 0);
-    int msb = getBitVal(reg, 7);
+    int bit = getBitVal(*reg, 0);
+    int msb = getBitVal(*reg, 7);
     *reg >>= 1;
 
     if (maintainMsb)
