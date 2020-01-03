@@ -622,6 +622,40 @@ int Cpu::doExtendedOpcode(Byte opcode)
             return 16;
         }
 
+        // Rotate - (RRC n) - Rotate n right, Bit 0 to Carry flag
+        case 0x0F: this->do8BitRegisterRotateRight(&(this->af.parts.hi)); return 8; // RRC A - 8 cycles
+        case 0x08: this->do8BitRegisterRotateRight(&(this->bc.parts.hi)); return 8; // RRC B - 8 cycles
+        case 0x09: this->do8BitRegisterRotateRight(&(this->bc.parts.lo)); return 8; // RRC C - 8 cycles
+        case 0x0A: this->do8BitRegisterRotateRight(&(this->de.parts.hi)); return 8; // RRC D - 8 cycles
+        case 0x0B: this->do8BitRegisterRotateRight(&(this->de.parts.lo)); return 8; // RRC E - 8 cycles
+        case 0x0C: this->do8BitRegisterRotateRight(&(this->hl.parts.hi)); return 8; // RRC H - 8 cycles
+        case 0x0D: this->do8BitRegisterRotateRight(&(this->hl.parts.lo)); return 8; // RRC L - 8 cycles
+        // RRC (HL) - 16 cycles
+        case 0x0E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterRotateRight(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
+        // Rotate - (RR n) - Rotate n right through carry flag
+        case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); return 8; // RR A - 8 cycles
+        case 0x18: this->do8BitRegisterRotateRight(&(this->bc.parts.hi), true); return 8; // RR B - 8 cycles
+        case 0x19: this->do8BitRegisterRotateRight(&(this->bc.parts.lo), true); return 8; // RR C - 8 cycles
+        case 0x1A: this->do8BitRegisterRotateRight(&(this->de.parts.hi), true); return 8; // RR D - 8 cycles
+        case 0x1B: this->do8BitRegisterRotateRight(&(this->de.parts.lo), true); return 8; // RR E - 8 cycles
+        case 0x1C: this->do8BitRegisterRotateRight(&(this->hl.parts.hi), true); return 8; // RR H - 8 cycles
+        case 0x1D: this->do8BitRegisterRotateRight(&(this->hl.parts.lo), true); return 8; // RR L - 8 cycles
+        // RR (HL) - 16 cycles
+        case 0x1E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterRotateRight(&temp, true);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
     }
 }
 
