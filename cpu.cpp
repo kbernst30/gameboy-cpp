@@ -550,6 +550,18 @@ int Cpu::doOpcode(Byte opcode)
 
         // Misc - (EI) - Enable interrupts after the NEXT instruction
         case 0xFB: this->willEnableInterrupts = true; return 4; // DI - 4 cycles
+
+        // Rotate - (RLCA) - Rotate A left, Bit 7 to Carry flag
+        case 0x07: this->do8BitRegisterRotateLeft(&(this->af.parts.hi)); return 4; // RLCA - 4 cycles
+
+        // Rotate - (RLA) - Rotate A left, through Carry flag
+        case 0x17: this->do8BitRegisterRotateLeft(&(this->af.parts.hi), true); return 4; // RLA - 4 cycles
+
+        // Rotate - (RRCA) - Rotate A right, Bit 7 to Carry flag
+        case 0x0F: this->do8BitRegisterRotateRight(&(this->af.parts.hi)); return 4; // RRCA - 4 cycles
+
+        // Rotate - (RRA) - Rotate A right, through Carry flag
+        case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); return 4; // RRA - 4 cycles
     }
 }
 
@@ -570,11 +582,46 @@ int Cpu::doExtendedOpcode(Byte opcode)
         // INC (HL) - 12 cycles
         case 0x36:
         {
-            Byte temp = this->mmu->readMemory(this->hl.reg);;
+            Byte temp = this->mmu->readMemory(this->hl.reg);
             this->do8BitRegisterSwap(&temp);
             this->mmu->writeMemory(this->hl.reg, temp);
             return 16;
         }
+
+        // Rotate - (RLC n) - Rotate n left, Bit 7 to Carry flag
+        case 0x07: this->do8BitRegisterRotateLeft(&(this->af.parts.hi)); return 8; // RLC A - 8 cycles
+        case 0x00: this->do8BitRegisterRotateLeft(&(this->bc.parts.hi)); return 8; // RLC B - 8 cycles
+        case 0x01: this->do8BitRegisterRotateLeft(&(this->bc.parts.lo)); return 8; // RLC C - 8 cycles
+        case 0x02: this->do8BitRegisterRotateLeft(&(this->de.parts.hi)); return 8; // RLC D - 8 cycles
+        case 0x03: this->do8BitRegisterRotateLeft(&(this->de.parts.lo)); return 8; // RLC E - 8 cycles
+        case 0x04: this->do8BitRegisterRotateLeft(&(this->hl.parts.hi)); return 8; // RLC H - 8 cycles
+        case 0x05: this->do8BitRegisterRotateLeft(&(this->hl.parts.lo)); return 8; // RLC L - 8 cycles
+        // RLC (HL) - 16 cycles
+        case 0x06:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterRotateLeft(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
+        // Rotate - (RL n) - Rotate n left through carry flag
+        case 0x17: this->do8BitRegisterRotateLeft(&(this->af.parts.hi), true); return 8; // RL A - 8 cycles
+        case 0x10: this->do8BitRegisterRotateLeft(&(this->bc.parts.hi), true); return 8; // RL B - 8 cycles
+        case 0x11: this->do8BitRegisterRotateLeft(&(this->bc.parts.lo), true); return 8; // RL C - 8 cycles
+        case 0x12: this->do8BitRegisterRotateLeft(&(this->de.parts.hi), true); return 8; // RL D - 8 cycles
+        case 0x13: this->do8BitRegisterRotateLeft(&(this->de.parts.lo), true); return 8; // RL E - 8 cycles
+        case 0x14: this->do8BitRegisterRotateLeft(&(this->hl.parts.hi), true); return 8; // RL H - 8 cycles
+        case 0x15: this->do8BitRegisterRotateLeft(&(this->hl.parts.lo), true); return 8; // RL L - 8 cycles
+        // RL (HL) - 16 cycles
+        case 0x16:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            this->do8BitRegisterRotateLeft(&temp, true);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+
     }
 }
 
@@ -881,4 +928,44 @@ void Cpu::do8BitRegisterSwap(Byte *reg)
     resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
     resetBit(&(this->af.parts.lo), CARRY_BIT);
+}
+
+void Cpu::do8BitRegisterRotateLeft(Byte *reg, bool throughCarry)
+{
+    // Rotate the bits of register reg left. Bit 7 should be set in the
+    // carry flag.
+    // Subtract flag should be reset
+    // Half carry flag should be reset
+    // Zero flag should be set if result is zero
+    int bit = getBitVal(reg, 7);
+    *reg <<= 1;
+    *reg |= throughCarry ? getBitVal(this->af.parts.lo, CARRY_BIT) : bit;
+
+    if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
+    else resetBit(&(this->af.parts.lo), CARRY_BIT);
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+}
+
+void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
+{
+    // Rotate the bits of register reg right. Bit 0 should be set in the
+    // carry flag.
+    // Subtract flag should be reset
+    // Half carry flag should be reset
+    // Zero flag should be set if result is zero
+    int bit = getBitVal(reg, 0);
+    *reg >>= 1;
+    *reg |= ((throughCarry ? getBitVal(this->af.parts.lo, CARRY_BIT) : bit) << 7);
+
+    if (bit == 1) setBit(&(this->af.parts.lo), CARRY_BIT);
+    else resetBit(&(this->af.parts.lo), CARRY_BIT);
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+
+    if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
 }
