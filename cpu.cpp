@@ -772,6 +772,250 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x7D: this->doTestBit(this->hl.parts.lo, 7);                   return 8;  // BIT 7, L - 8 cycles
         case 0x7E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 7); return 16; // BIT 7, (HL) - 8 cycles
         case 0x7F: this->doTestBit(this->af.parts.hi, 7);                   return 8;  // BIT 7, A - 8 cycles
+
+        // Bit - (SET b, r) - Set bit b in register r
+        case 0xC0: setBit(&(this->bc.parts.hi), 0); return 8; // SET 0, B - 8 cycles
+        case 0xC1: setBit(&(this->bc.parts.lo), 0); return 8; // SET 0, C - 8 cycles
+        case 0xC2: setBit(&(this->de.parts.hi), 0); return 8; // SET 0, D - 8 cycles
+        case 0xC3: setBit(&(this->de.parts.lo), 0); return 8; // SET 0, E - 8 cycles
+        case 0xC4: setBit(&(this->hl.parts.hi), 0); return 8; // SET 0, H - 8 cycles
+        case 0xC5: setBit(&(this->hl.parts.lo), 0); return 8; // SET 0, L - 8 cycles
+        // SET 0, (HL) - 16 cycles
+        case 0xC6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 0);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xC7: setBit(&(this->af.parts.hi), 0); return 8; // SET 0, A - 8 cycles
+        case 0xC8: setBit(&(this->bc.parts.hi), 1); return 8; // SET 1, B - 8 cycles
+        case 0xC9: setBit(&(this->bc.parts.lo), 1); return 8; // SET 1, C - 8 cycles
+        case 0xCA: setBit(&(this->de.parts.hi), 1); return 8; // SET 1, D - 8 cycles
+        case 0xCB: setBit(&(this->de.parts.lo), 1); return 8; // SET 1, E - 8 cycles
+        case 0xCC: setBit(&(this->hl.parts.hi), 1); return 8; // SET 1, H - 8 cycles
+        case 0xCD: setBit(&(this->hl.parts.lo), 1); return 8; // SET 1, L - 8 cycles
+        // SET 1, (HL) - 16 cycles
+        case 0xCE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 1);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xCF: setBit(&(this->af.parts.hi), 1); return 8; // SET 1, A - 8 cycles
+        case 0xD0: setBit(&(this->bc.parts.hi), 2); return 8; // SET 2, B - 8 cycles
+        case 0xD1: setBit(&(this->bc.parts.lo), 2); return 8; // SET 2, C - 8 cycles
+        case 0xD2: setBit(&(this->de.parts.hi), 2); return 8; // SET 2, D - 8 cycles
+        case 0xD3: setBit(&(this->de.parts.lo), 2); return 8; // SET 2, E - 8 cycles
+        case 0xD4: setBit(&(this->hl.parts.hi), 2); return 8; // SET 2, H - 8 cycles
+        case 0xD5: setBit(&(this->hl.parts.lo), 2); return 8; // SET 2, L - 8 cycles
+        // SET 2, (HL) - 16 cycles
+        case 0xD6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 2);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xD7: setBit(&(this->af.parts.hi), 2); return 8; // SET 2, A - 8 cycles
+        case 0xD8: setBit(&(this->bc.parts.hi), 3); return 8; // SET 3, B - 8 cycles
+        case 0xD9: setBit(&(this->bc.parts.lo), 3); return 8; // SET 3, C - 8 cycles
+        case 0xDA: setBit(&(this->de.parts.hi), 3); return 8; // SET 3, D - 8 cycles
+        case 0xDB: setBit(&(this->de.parts.lo), 3); return 8; // SET 3, E - 8 cycles
+        case 0xDC: setBit(&(this->hl.parts.hi), 3); return 8; // SET 3, H - 8 cycles
+        case 0xDD: setBit(&(this->hl.parts.lo), 3); return 8; // SET 3, L - 8 cycles
+        // SET 3, (HL) - 16 cycles
+        case 0xDE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 3);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xDF: setBit(&(this->af.parts.hi), 3); return 8; // SET 3, A - 8 cycles
+        case 0xE0: setBit(&(this->bc.parts.hi), 4); return 8; // SET 4, B - 8 cycles
+        case 0xE1: setBit(&(this->bc.parts.lo), 4); return 8; // SET 4, C - 8 cycles
+        case 0xE2: setBit(&(this->de.parts.hi), 4); return 8; // SET 4, D - 8 cycles
+        case 0xE3: setBit(&(this->de.parts.lo), 4); return 8; // SET 4, E - 8 cycles
+        case 0xE4: setBit(&(this->hl.parts.hi), 4); return 8; // SET 4, H - 8 cycles
+        case 0xE5: setBit(&(this->hl.parts.lo), 4); return 8; // SET 4, L - 8 cycles
+        // SET 4, (HL) - 16 cycles
+        case 0xE6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 4);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xE7: setBit(&(this->af.parts.hi), 4); return 8; // SET 4, A - 8 cycles
+        case 0xE8: setBit(&(this->bc.parts.hi), 5); return 8; // SET 5, B - 8 cycles
+        case 0xE9: setBit(&(this->bc.parts.lo), 5); return 8; // SET 5, C - 8 cycles
+        case 0xEA: setBit(&(this->de.parts.hi), 5); return 8; // SET 5, D - 8 cycles
+        case 0xEB: setBit(&(this->de.parts.lo), 5); return 8; // SET 5, E - 8 cycles
+        case 0xEC: setBit(&(this->hl.parts.hi), 5); return 8; // SET 5, H - 8 cycles
+        case 0xED: setBit(&(this->hl.parts.lo), 5); return 8; // SET 5, L - 8 cycles
+        // SET 5, (HL) - 16 cycles
+        case 0xEE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 5);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xEF: setBit(&(this->af.parts.hi), 5); return 8; // SET 5, A - 8 cycles
+        case 0xF0: setBit(&(this->bc.parts.hi), 6); return 8; // SET 6, B - 8 cycles
+        case 0xF1: setBit(&(this->bc.parts.lo), 6); return 8; // SET 6, C - 8 cycles
+        case 0xF2: setBit(&(this->de.parts.hi), 6); return 8; // SET 6, D - 8 cycles
+        case 0xF3: setBit(&(this->de.parts.lo), 6); return 8; // SET 6, E - 8 cycles
+        case 0xF4: setBit(&(this->hl.parts.hi), 6); return 8; // SET 6, H - 8 cycles
+        case 0xF5: setBit(&(this->hl.parts.lo), 6); return 8; // SET 6, L - 8 cycles
+        // SET 6, (HL) - 16 cycles
+        case 0xF6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 6);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xF7: setBit(&(this->af.parts.hi), 6); return 8; // SET 6, A - 8 cycles
+        case 0xF8: setBit(&(this->bc.parts.hi), 7); return 8; // SET 7, B - 8 cycles
+        case 0xF9: setBit(&(this->bc.parts.lo), 7); return 8; // SET 7, C - 8 cycles
+        case 0xFA: setBit(&(this->de.parts.hi), 7); return 8; // SET 7, D - 8 cycles
+        case 0xFB: setBit(&(this->de.parts.lo), 7); return 8; // SET 7, E - 8 cycles
+        case 0xFC: setBit(&(this->hl.parts.hi), 7); return 8; // SET 7, H - 8 cycles
+        case 0xFD: setBit(&(this->hl.parts.lo), 7); return 8; // SET 7, L - 8 cycles
+        // SET 7, (HL) - 16 cycles
+        case 0xFE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            setBit(&temp, 7);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xFF: setBit(&(this->af.parts.hi), 7); return 8; // SET 7, A - 8 cycles
+
+        // Bit - (RES b, r) - Reset bit b in register r
+        case 0x80: resetBit(&(this->bc.parts.hi), 0); return 8; // RES 0, B - 8 cycles
+        case 0x81: resetBit(&(this->bc.parts.lo), 0); return 8; // RES 0, C - 8 cycles
+        case 0x82: resetBit(&(this->de.parts.hi), 0); return 8; // RES 0, D - 8 cycles
+        case 0x83: resetBit(&(this->de.parts.lo), 0); return 8; // RES 0, E - 8 cycles
+        case 0x84: resetBit(&(this->hl.parts.hi), 0); return 8; // RES 0, H - 8 cycles
+        case 0x85: resetBit(&(this->hl.parts.lo), 0); return 8; // RES 0, L - 8 cycles
+        // RES 0, (HL) - 16 cycles
+        case 0x86:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 0);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0x87: resetBit(&(this->af.parts.hi), 0); return 8; // RES 0, A - 8 cycles
+        case 0x88: resetBit(&(this->bc.parts.hi), 1); return 8; // RES 1, B - 8 cycles
+        case 0x89: resetBit(&(this->bc.parts.lo), 1); return 8; // RES 1, C - 8 cycles
+        case 0x8A: resetBit(&(this->de.parts.hi), 1); return 8; // RES 1, D - 8 cycles
+        case 0x8B: resetBit(&(this->de.parts.lo), 1); return 8; // RES 1, E - 8 cycles
+        case 0x8C: resetBit(&(this->hl.parts.hi), 1); return 8; // RES 1, H - 8 cycles
+        case 0x8D: resetBit(&(this->hl.parts.lo), 1); return 8; // RES 1, L - 8 cycles
+        // RES 1, (HL) - 16 cycles
+        case 0x8E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 1);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0x8F: resetBit(&(this->af.parts.hi), 1); return 8; // RES 1, A - 8 cycles
+        case 0x90: resetBit(&(this->bc.parts.hi), 2); return 8; // RES 2, B - 8 cycles
+        case 0x91: resetBit(&(this->bc.parts.lo), 2); return 8; // RES 2, C - 8 cycles
+        case 0x92: resetBit(&(this->de.parts.hi), 2); return 8; // RES 2, D - 8 cycles
+        case 0x93: resetBit(&(this->de.parts.lo), 2); return 8; // RES 2, E - 8 cycles
+        case 0x94: resetBit(&(this->hl.parts.hi), 2); return 8; // RES 2, H - 8 cycles
+        case 0x95: resetBit(&(this->hl.parts.lo), 2); return 8; // RES 2, L - 8 cycles
+        // RES 2, (HL) - 16 cycles
+        case 0x96:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 2);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0x97: resetBit(&(this->af.parts.hi), 2); return 8; // RES 2, A - 8 cycles
+        case 0x98: resetBit(&(this->bc.parts.hi), 3); return 8; // RES 3, B - 8 cycles
+        case 0x99: resetBit(&(this->bc.parts.lo), 3); return 8; // RES 3, C - 8 cycles
+        case 0x9A: resetBit(&(this->de.parts.hi), 3); return 8; // RES 3, D - 8 cycles
+        case 0x9B: resetBit(&(this->de.parts.lo), 3); return 8; // RES 3, E - 8 cycles
+        case 0x9C: resetBit(&(this->hl.parts.hi), 3); return 8; // RES 3, H - 8 cycles
+        case 0x9D: resetBit(&(this->hl.parts.lo), 3); return 8; // RES 3, L - 8 cycles
+        // RES 3, (HL) - 16 cycles
+        case 0x9E:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 3);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0x9F: resetBit(&(this->af.parts.hi), 3); return 8; // RES 3, A - 8 cycles
+        case 0xA0: resetBit(&(this->bc.parts.hi), 4); return 8; // RES 4, B - 8 cycles
+        case 0xA1: resetBit(&(this->bc.parts.lo), 4); return 8; // RES 4, C - 8 cycles
+        case 0xA2: resetBit(&(this->de.parts.hi), 4); return 8; // RES 4, D - 8 cycles
+        case 0xA3: resetBit(&(this->de.parts.lo), 4); return 8; // RES 4, E - 8 cycles
+        case 0xA4: resetBit(&(this->hl.parts.hi), 4); return 8; // RES 4, H - 8 cycles
+        case 0xA5: resetBit(&(this->hl.parts.lo), 4); return 8; // RES 4, L - 8 cycles
+        // RES 4, (HL) - 16 cycles
+        case 0xA6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 4);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xA7: resetBit(&(this->af.parts.hi), 4); return 8; // RES 4, A - 8 cycles
+        case 0xA8: resetBit(&(this->bc.parts.hi), 5); return 8; // RES 5, B - 8 cycles
+        case 0xA9: resetBit(&(this->bc.parts.lo), 5); return 8; // RES 5, C - 8 cycles
+        case 0xAA: resetBit(&(this->de.parts.hi), 5); return 8; // RES 5, D - 8 cycles
+        case 0xAB: resetBit(&(this->de.parts.lo), 5); return 8; // RES 5, E - 8 cycles
+        case 0xAC: resetBit(&(this->hl.parts.hi), 5); return 8; // RES 5, H - 8 cycles
+        case 0xAD: resetBit(&(this->hl.parts.lo), 5); return 8; // RES 5, L - 8 cycles
+        // RES 5, (HL) - 16 cycles
+        case 0xAE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 5);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xAF: resetBit(&(this->af.parts.hi), 5); return 8; // RES 5, A - 8 cycles
+        case 0xB0: resetBit(&(this->bc.parts.hi), 6); return 8; // RES 6, B - 8 cycles
+        case 0xB1: resetBit(&(this->bc.parts.lo), 6); return 8; // RES 6, C - 8 cycles
+        case 0xB2: resetBit(&(this->de.parts.hi), 6); return 8; // RES 6, D - 8 cycles
+        case 0xB3: resetBit(&(this->de.parts.lo), 6); return 8; // RES 6, E - 8 cycles
+        case 0xB4: resetBit(&(this->hl.parts.hi), 6); return 8; // RES 6, H - 8 cycles
+        case 0xB5: resetBit(&(this->hl.parts.lo), 6); return 8; // RES 6, L - 8 cycles
+        // RES 6, (HL) - 16 cycles
+        case 0xB6:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 6);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xB7: resetBit(&(this->af.parts.hi), 6); return 8; // RES 6, A - 8 cycles
+        case 0xB8: resetBit(&(this->bc.parts.hi), 7); return 8; // RES 7, B - 8 cycles
+        case 0xB9: resetBit(&(this->bc.parts.lo), 7); return 8; // RES 7, C - 8 cycles
+        case 0xBA: resetBit(&(this->de.parts.hi), 7); return 8; // RES 7, D - 8 cycles
+        case 0xBB: resetBit(&(this->de.parts.lo), 7); return 8; // RES 7, E - 8 cycles
+        case 0xBC: resetBit(&(this->hl.parts.hi), 7); return 8; // RES 7, H - 8 cycles
+        case 0xBD: resetBit(&(this->hl.parts.lo), 7); return 8; // RES 7, L - 8 cycles
+        // RES 7, (HL) - 16 cycles
+        case 0xBE:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);
+            resetBit(&temp, 7);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
+        case 0xBF: resetBit(&(this->af.parts.hi), 7); return 8; // RES 7, A - 8 cycles
     }
 }
 
