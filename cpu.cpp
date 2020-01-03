@@ -77,6 +77,9 @@ int Cpu::doOpcode(Byte opcode)
     // appropriately
     switch (opcode)
     {
+        // CB Table - This is where we need to execute extended opcode from secondary CB table
+        case 0xCB: return this->doExtendedOpcode(this->getNextByte());
+
         // No-Op
         case 0x00: return 4; // No-Op - 4 cycles
 
@@ -202,7 +205,8 @@ int Cpu::doOpcode(Byte opcode)
 
         // 16 Bit Load - (LD HL SP+n) - Load Stack pointer plus one byte signed immediate value into HL - 12 cycles
         // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
-        case 0xF8: {
+        case 0xF8:
+        {
             SignedByte offset = (SignedByte) this->getNextByte();
             unsigned int value = this->stackPointer.reg + offset;
 
@@ -234,7 +238,8 @@ int Cpu::doOpcode(Byte opcode)
         }
 
         // 16 Bit Load - (LD (nn), SP) - Put Stack pointer into memory at nn - 20 cycles
-        case 0x08: {
+        case 0x08:
+        {
             Word address = this->getNextWord();
             this->mmu->writeMemory(address, this->stackPointer.parts.lo);
             this->mmu->writeMemory(address + 1, this->stackPointer.parts.hi);
@@ -350,7 +355,8 @@ int Cpu::doOpcode(Byte opcode)
         case 0x24: this->do8BitRegisterIncrement(&(this->hl.parts.hi)); return 4; // INC H - 4 cycles
         case 0x2C: this->do8BitRegisterIncrement(&(this->hl.parts.lo)); return 4; // INC L - 4 cycles
         // INC (HL) - 12 cycles
-        case 0x34: {
+        case 0x34:
+        {
             Byte temp = this->mmu->readMemory(this->hl.reg);;
             this->do8BitRegisterIncrement(&temp);
             this->mmu->writeMemory(this->hl.reg, temp);
@@ -366,7 +372,8 @@ int Cpu::doOpcode(Byte opcode)
         case 0x25: this->do8BitRegisterDecrement(&(this->hl.parts.hi)); return 4; // DEC H - 4 cycles
         case 0x2D: this->do8BitRegisterDecrement(&(this->hl.parts.lo)); return 4; // DEC L - 4 cycles
         // DEC (HL) - 12 cycles
-        case 0x35: {
+        case 0x35:
+        {
             Byte temp = this->mmu->readMemory(this->hl.reg);
             this->do8BitRegisterDecrement(&temp);
             this->mmu->writeMemory(this->hl.reg, temp);
@@ -381,7 +388,8 @@ int Cpu::doOpcode(Byte opcode)
 
         // 16 Bit Arithmetic - (ADD SP, n) - Add n to SP - 16 cycles
         // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
-        case 0xE8: {
+        case 0xE8:
+        {
             SignedByte offset = (SignedByte) this->getNextByte();
             unsigned int value = this->stackPointer.reg + offset;
 
@@ -423,6 +431,104 @@ int Cpu::doOpcode(Byte opcode)
         case 0x1B: this->de.reg--;           return 8; // DEC DE = 8 cycles
         case 0x2B: this->hl.reg--;           return 8; // DEC HL = 8 cycles
         case 0x3B: this->stackPointer.reg--; return 8; // DEC SP = 8 cycles
+
+        // Misc - (DAA) - Decimal Adjust Register A - 4 cycles
+        // Set Z flag if register A is zero, Reset H flag, set/reset C flag, N flag not affected
+        case 0x27:
+        {
+            // This should adjust the value in register A so that it proper BCD represetnation
+            // where the value SHOULD be the result of a previous ADD or SUB of two BCD numbers
+            // To adjust properly, we need to add or subtract from the current value
+            // TODO I really need to understand this better
+            Byte upper = this->af.parts.hi >> 4;
+            Byte lower = this->af.parts.hi & 0xF;
+
+            if (isBitSet(this->af.parts.lo, SUBTRACT_BIT))
+            {
+                // Previous operation was a subtract
+                // If half carry, we need to subtract 6 from the lower nibble
+                // If carry, we need to subtract 6 from the upper nibble
+                if (isBitSet(this->af.parts.lo, HALF_CARRY_BIT)) lower -= 0x6;
+                if (isBitSet(this->af.parts.lo, CARRY_BIT)) upper -= 6;
+            }
+            else
+            {
+                // Previous operation was an add
+                // If half carry or first nibble is greater than 9, we need to add 6 to lower nibble
+                // If carry or second nibble is greater than 9, we need to add 6 from the upper nibble
+                if (isBitSet(this->af.parts.lo, HALF_CARRY_BIT) || lower > 9) lower += 0x6;
+                if (isBitSet(this->af.parts.lo, CARRY_BIT) || upper > 9) upper += 6;
+            }
+
+            Byte bcd = (upper << 4) | lower;
+
+            if (bcd == 0)
+            {
+                setBit(&(this->af.parts.lo), ZERO_BIT);
+            }
+
+            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+
+            this->af.parts.hi = bcd;
+            return 4;
+        }
+
+        // Misc - (CPL) - Complement Register A - 4 cycles
+        // Set N flag and Set H flag
+        case 0x2F:
+        {
+            this->af.parts.hi ^= 0xFF;
+            setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            setBit(&(this->af.parts.lo), SUBTRACT_BIT);
+            return 4;
+        }
+
+        // Misc - (CCF) - Complement Carry Flag - 4 cycles
+        // Reset N flag and reset H flag
+        case 0x3F:
+        {
+            if (isBitSet(this->af.parts.lo, CARRY_BIT)) resetBit(&(this->af.parts.lo), CARRY_BIT);
+            else setBit(&(this->af.parts.lo), CARRY_BIT);
+            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+            return 4;
+        }
+
+        // Misc - (SCF) - Set Carry Flag - 4 cycles
+        // Reset N flag and reset H flag
+        case 0x37:
+        {
+            setBit(&(this->af.parts.lo), CARRY_BIT);
+            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+            return 4;
+        }
+
+    }
+}
+
+int Cpu::doExtendedOpcode(Byte opcode)
+{
+    // Opcode CB results in a lookup in a secondary opcode table. This is where we will check
+    // those operations
+    switch (opcode)
+    {
+        // Misc - (SWAP n) - Swap upper and lower nibbles of n
+        case 0x37: this->do8BitRegisterSwap(&(this->af.parts.hi)); return 8; // SWAP A - 8 cycles
+        case 0x30: this->do8BitRegisterSwap(&(this->bc.parts.hi)); return 8; // SWAP B - 8 cycles
+        case 0x31: this->do8BitRegisterSwap(&(this->bc.parts.lo)); return 8; // SWAP C - 8 cycles
+        case 0x32: this->do8BitRegisterSwap(&(this->de.parts.hi)); return 8; // SWAP D - 8 cycles
+        case 0x33: this->do8BitRegisterSwap(&(this->de.parts.lo)); return 8; // SWAP E - 8 cycles
+        case 0x34: this->do8BitRegisterSwap(&(this->hl.parts.hi)); return 8; // SWAP H - 8 cycles
+        case 0x35: this->do8BitRegisterSwap(&(this->hl.parts.lo)); return 8; // SWAP L - 8 cycles
+        // INC (HL) - 12 cycles
+        case 0x36:
+        {
+            Byte temp = this->mmu->readMemory(this->hl.reg);;
+            this->do8BitRegisterSwap(&temp);
+            this->mmu->writeMemory(this->hl.reg, temp);
+            return 16;
+        }
     }
 }
 
@@ -710,4 +816,23 @@ void Cpu::do8BitRegisterDecrement(Byte *reg)
     }
 
     *reg = (Byte) (result & 0xFF);
+}
+
+void Cpu::do8BitRegisterSwap(Byte *reg)
+{
+    // Swaps upper and lower nibbles of register reg
+    // Zero flag should be set if the result is zero
+    // ALl other flags are reset
+
+    Byte lower = *reg & 0xF;
+    *reg = (lower << 4) | (*reg >> 4);
+
+    if (*reg == 0)
+    {
+        setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
 }

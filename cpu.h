@@ -31,6 +31,7 @@ class Cpu {
         Word popWordFromStack();
 
         int doOpcode(Byte opcode);
+        int doExtendedOpcode(Byte opcode);
 
         // Op helpers
         Word getNextWord();
@@ -47,6 +48,7 @@ class Cpu {
         void do8BitRegisterCompare(Byte source, Byte value);
         void do8BitRegisterIncrement(Byte *reg);
         void do8BitRegisterDecrement(Byte *reg);
+        void do8BitRegisterSwap(Byte *reg);
 
         // There are 8 8-bit registers in the Gameboy
         // A, B, C, D, E, F, H and L. They are usually
@@ -69,6 +71,9 @@ class Cpu {
         // The master interrupt enabled switch
         // This is stored here as the CPU will need direct access to its control
         bool interruptMaster = true;
+
+        // Specify if the CPU is halted or not
+        bool halted = false;
 
 };
 
