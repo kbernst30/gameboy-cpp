@@ -660,6 +660,32 @@ int Cpu::doOpcode(Byte opcode)
 
             return 12;
         }
+
+        // Restart - (RST n) - Push present address onto stack, jump to $0000 + n
+        case 0xC7: this->pushWordTostack(this->programCounter); this->programCounter = 0x00; return 32; // RST 00 - 32 cycles
+        case 0xCF: this->pushWordTostack(this->programCounter); this->programCounter = 0x08; return 32; // RST 08 - 32 cycles
+        case 0xD7: this->pushWordTostack(this->programCounter); this->programCounter = 0x10; return 32; // RST 10 - 32 cycles
+        case 0xDF: this->pushWordTostack(this->programCounter); this->programCounter = 0x18; return 32; // RST 18 - 32 cycles
+        case 0xE7: this->pushWordTostack(this->programCounter); this->programCounter = 0x20; return 32; // RST 20 - 32 cycles
+        case 0xEF: this->pushWordTostack(this->programCounter); this->programCounter = 0x28; return 32; // RST 28 - 32 cycles
+        case 0xF7: this->pushWordTostack(this->programCounter); this->programCounter = 0x30; return 32; // RST 30 - 32 cycles
+        case 0xFF: this->pushWordTostack(this->programCounter); this->programCounter = 0x38; return 32; // RST 38 - 32 cycles
+
+        // Return - (RET) - Pop two bytes from stack and jump to that address
+        case 0xC9: this->programCounter = this->popWordFromStack(); return 8; // RET - 8 cycles
+
+        // Return - (RET cc) - Return if cc is true
+        // cc = NZ => Z flag is reset
+        // cc = Z => Z flag is set
+        // cc = NC => C flag is reset
+        // cc = C => C flag is set
+        case 0xC0: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;  return 8; // RET NZ - 8 cycles
+        case 0xC8: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;   return 8; // RET Z - 8 cycles
+        case 0xD0: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter; return 8; // RET NC - 8 cycles
+        case 0xD8: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter;  return 8; // RET C - 8 cycles
+
+        // Return - (RETI) - Pop two bytes from stack and jump to that address, then enable interrupts
+        case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 8; // RETI - 8 cycles
     }
 }
 
