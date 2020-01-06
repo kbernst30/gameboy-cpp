@@ -10,7 +10,8 @@ using namespace std;
 
 void Mmu::loadRom(Byte *cartridge)
 {
-    this->cartridge = cartridge;
+    *(this->cartridge) = *cartridge;
+    // std::copy(std::begin(*cartridge), std::end(*cartridge), std::begin(this->cartridge));
 
     // Load ROM banks 0 and 1 into memory
     for (int i = 0; i < MEMORY_ROM_SIZE; i++)
@@ -84,7 +85,7 @@ Byte Mmu::readMemory(Word address)
     // TODO Is this the best way? Or should we do the swap?
     if (address >= 0x4000 && address < 0x8000)
     {
-        return this->cartridge[(address - 0x4000) + (this->currentRomBank * 0x4000)];
+        return *(this->cartridge + (address - 0x4000) + ((this->currentRomBank - 1) * 0x4000));
     }
 
     // If we are reading from RAM than we should get data in appropriate RAM bank
