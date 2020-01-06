@@ -7,27 +7,7 @@
 
 void Display::render()
 {
-    // TODO Most of this should be ported and moved around so emulator can render at appropriate interval
-    SDL_Event event;
-    SDL_Renderer *renderer;
-    SDL_Window *window;
-    int i;
 
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, 0, &window, &renderer);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    for (i = 0; i < SCREEN_WIDTH * 2; ++i)
-        SDL_RenderDrawPoint(renderer, i, i);
-    SDL_RenderPresent(renderer);
-    while (1) {
-        if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
-            break;
-    }
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 }
 
 void Display::drawScanline()

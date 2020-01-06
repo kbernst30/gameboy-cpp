@@ -71,18 +71,15 @@ int main()
 
     // This is just a debug loop to see if data was loaded into
     // memory correctly - print out some instructions (start where PC would be)
-    for (int i = 0x100; i < 0x100 + 100; i += 2) {
-        // printf("0x%.2x\n", cartridge[i]);
-        Word address = (cartridge[i + 1] << 8) | cartridge[i];
-        cout << "0x" << std::hex << address << endl;
-    }
+    // for (int i = 0x100; i < 0x100 + 100; i += 2) {
+    //     // printf("0x%.2x\n", cartridge[i]);
+    //     Word address = (cartridge[i + 1] << 8) | cartridge[i];
+    //     cout << "0x" << std::hex << address << endl;
+    // }
 
     // TODO we need to deal with the joypad
 
     gb.run(cartridge);
-
-    Display *display = u_display.get();
-    display->render();
 
     return EXIT_SUCCESS;
 }

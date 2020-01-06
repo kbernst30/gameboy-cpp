@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++14 -Wall -Wextra -pedantic-errors
+CFLAGS = -std=c++14 -Wall -Wextra -pedantic-errors -g
 LDFLAGS = -lm -lSDL2
 DEPS = gameboy.o display.o cpu.o mmu.o
 

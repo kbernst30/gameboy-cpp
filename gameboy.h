@@ -35,6 +35,9 @@ class Gameboy {
 
         bool isLcdEnabled();
         void setLcdStatus();
+
+        // GUI - OpenGL/SDL
+        bool createWindow();
 };
 
 #endif

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <SDL2/SDL.h>
+
 #include "gameboy.h"
 
 using namespace std;
@@ -13,7 +15,36 @@ void Gameboy::run(Byte *cartridge) {
     this->cpu->reset();
     this->mmu->reset();
 
+    this->createWindow();
+
+    float fps = 59.73;
+
+    // ~60fps - This is the amount of times the "update" should execute a second
+	float interval = 1000 / fps;
+
+    unsigned int time = SDL_GetTicks();
+
+
     // TODO call update 60 times a second (i.e. 60fps)
+    SDL_Event event;
+    while (true)
+    {
+        unsigned int currentTime = SDL_GetTicks();
+
+        if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
+            break;
+
+        if (time + interval < currentTime)
+        {
+            time = currentTime;
+            std::cout << SDL_GetTicks() << std::endl;
+            this->update();
+        }
+    }
+
+    // SDL_DestroyRenderer(renderer);
+    // SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 void Gameboy::update() {
@@ -152,7 +183,7 @@ void Gameboy::updateGraphics(int cycles)
 
     if (this->scanlineCounter <= 0)
     {
-        // If the coutner has coutned down (from 456) then it is time to 
+        // If the coutner has coutned down (from 456) then it is time to
         // draw the next scanline
         this->mmu->updateCurrentScanline();
         Byte currentScanline = this->mmu->readMemory(CURRENT_SCANLINE_ADDR);
@@ -171,13 +202,13 @@ void Gameboy::updateGraphics(int cycles)
         }
         else if (currentScanline > MAX_SCANLINES)
         {
-            // We have gone past the range of scanlines in this case, meaning we 
+            // We have gone past the range of scanlines in this case, meaning we
             // need to reset back to 0
-            this->mmu->resetCurrentScanline();  
+            this->mmu->resetCurrentScanline();
         }
         else
         {
-            // We are within an appropriate scanline range (i.e. 0 - 143) which 
+            // We are within an appropriate scanline range (i.e. 0 - 143) which
             // means we can draw
             this->display->drawScanline();
         }
@@ -200,7 +231,7 @@ void Gameboy::setLcdStatus()
         // and we should ensure we reset the scaline
         this->scanlineCounter = 456;
         this->mmu->resetCurrentScanline();
-        
+
         lcdStatus &= 0b11111100; // Turn off bits 0 and 1
         setBit(&lcdStatus, 0); // Bit 0 should be set for mode 1
         this->mmu->writeMemory(LCD_STATUS_ADDR, lcdStatus);
@@ -224,7 +255,7 @@ void Gameboy::setLcdStatus()
     else
     {
         // If we are drawing a current scanline, we should be cycling through the other LCD modes
-        // The cycle starts for a new scanline in mode 2 (Searching Sprite Atts), then after 80 cycles of 
+        // The cycle starts for a new scanline in mode 2 (Searching Sprite Atts), then after 80 cycles of
         // the 456 we are counting, we move to mode 3 (Transferring data to LCD driver). Mode 3 will take
         // another 172 cycles, and then we move to mode 0 (H-Blank). When the counter has gone below 0,
         // we will have moved to another scanline and we shuold start back at mode 2
@@ -257,11 +288,11 @@ void Gameboy::setLcdStatus()
     if (newLcdMode != lcdMode && shouldRequestInterrupt)
     {
         // Interrupt bit 1 is for LCD interrupt
-        this->cpu->requestInterrupt(1); 
+        this->cpu->requestInterrupt(1);
     }
 
-    // If the current scanline is the same as the value in 0xFF45, then 
-    // we should set the coincidence flag. And appropriately request an 
+    // If the current scanline is the same as the value in 0xFF45, then
+    // we should set the coincidence flag. And appropriately request an
     // LCD interrupt IF it is enabled (bit 6)
     if (currentScanline == this->mmu->readMemory(0xFF45))
     {
@@ -276,7 +307,29 @@ void Gameboy::setLcdStatus()
     {
         resetBit(&lcdStatus, 2);
     }
-    
+
     // Finally, update the status now in memory
     this->mmu->writeMemory(CURRENT_SCANLINE_ADDR, lcdStatus);
+}
+
+bool Gameboy::createWindow()
+{
+    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+	{
+		return false;
+	}
+
+	SDL_Event event;
+    SDL_Renderer *renderer;
+    SDL_Window *window;
+    int i;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, 0, &window, &renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    for (i = 0; i < SCREEN_WIDTH * 2; ++i)
+        SDL_RenderDrawPoint(renderer, i, i);
+    SDL_RenderPresent(renderer);
 }

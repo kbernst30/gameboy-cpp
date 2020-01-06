@@ -1,3 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
+#include <memory>
+#include <iostream>
+#include <fstream>
+
 #include "cpu.h"
 #include "utils.h"
 
@@ -686,6 +693,8 @@ int Cpu::doOpcode(Byte opcode)
 
         // Return - (RETI) - Pop two bytes from stack and jump to that address, then enable interrupts
         case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 8; // RETI - 8 cycles
+
+        default: std::cout << "unknown op: 0x" << std::hex << opcode << std::endl; return 4;
     }
 }
 
@@ -1140,6 +1149,8 @@ int Cpu::doExtendedOpcode(Byte opcode)
             return 16;
         }
         case 0xBF: resetBit(&(this->af.parts.hi), 7); return 8; // RES 7, A - 8 cycles
+
+        default: std::cout << "unknown op: 0x" << std::hex << opcode << std::endl; return 4;
     }
 }
 
