@@ -574,7 +574,92 @@ int Cpu::doOpcode(Byte opcode)
         case 0xC2: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP NZ, nn - 12 cycles
         case 0xCA: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;   return 12; // JP Z, nn - 12 cycles
         case 0xD2: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2; return 12; // JP NC, nn - 12 cycles
-        case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP NZ, nn - 12 cycles
+        case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP C, nn - 12 cycles
+
+        // Jump - (JP (HL)) - Jump to address contained in HL
+        case 0xE9: this->programCounter = this->mmu->readMemory(this->hl.reg); return 4; // JP (HL) - 4 cycles
+
+        // Jump - (JR n) - Add n to current address and jump, n is signed - we incremented PC so subtract one for curreent address
+        case 0x18: this->programCounter = this->programCounter - 1 + ((SignedByte) this->getNextByte()); return 8; // JR n - 8 cycles
+
+        // Jump - (JR cc, n) - Add n to current address and jump, n is signed, if cc is true
+        // cc = NZ => Z flag is reset
+        // cc = Z => Z flag is set
+        // cc = NC => C flag is reset
+        // cc = C => C flag is set
+        case 0x20: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR NZ, n - 8 cycles
+        case 0x28: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;   return 8; // JR Z, n - 8 cycles
+        case 0x30: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1; return 8; // JR NC, n - 8 cycles
+        case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR C, n - 8 cycles
+
+        // Call - (CALL nn) - Push address of next instruction (current PC) onto stack and then jump to address nn
+        case 0xCD: this->pushWordTostack(this->programCounter); this->programCounter = this->getNextWord(); return 12; // CALL nnn - 12 cycles
+
+        // Call - (CALL cc, nn) - Call address nn, immediate two byte value, if cc is true
+        // cc = NZ => Z flag is reset
+        // cc = Z => Z flag is set
+        // cc = NC => C flag is reset
+        // cc = C => C flag is set
+        // CALL NZ, nn - 12 cycles
+        case 0xC4:
+        {
+            if (!isBitSet(this->af.parts.lo, ZERO_BIT))
+            {
+                this->pushWordTostack(this->programCounter + 2);
+                this->programCounter = this->getNextWord();
+            }
+            else
+            {
+                this->programCounter += 2;
+            }
+
+            return 12;
+        }
+        // CALL Z, nn - 12 cycles
+        case 0xCC:
+        {
+            if (isBitSet(this->af.parts.lo, ZERO_BIT))
+            {
+                this->pushWordTostack(this->programCounter + 2);
+                this->programCounter = this->getNextWord();
+            }
+            else
+            {
+                this->programCounter += 2;
+            }
+
+            return 12;
+        }
+        // CALL NC, nn - 12 cycles
+        case 0xD4:
+        {
+            if (!isBitSet(this->af.parts.lo, CARRY_BIT))
+            {
+                this->pushWordTostack(this->programCounter + 2);
+                this->programCounter = this->getNextWord();
+            }
+            else
+            {
+                this->programCounter += 2;
+            }
+
+            return 12;
+        }
+        // CALL C, nn - 12 cycles
+        case 0xDC:
+        {
+            if (isBitSet(this->af.parts.lo, CARRY_BIT))
+            {
+                this->pushWordTostack(this->programCounter + 2);
+                this->programCounter = this->getNextWord();
+            }
+            else
+            {
+                this->programCounter += 2;
+            }
+
+            return 12;
+        }
     }
 }
 

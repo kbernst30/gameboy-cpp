@@ -24,6 +24,8 @@
 class Mmu {
 
     public:
+        Mmu() {};
+
         // Load ROM data into memory
         void loadRom(Byte *cartridge);
 
