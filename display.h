@@ -9,14 +9,15 @@ class Display {
     public:
         Display(Mmu *_mmu) : mmu(_mmu) {};
 
-        void render();
         void drawScanline();
+
+        Color getPixel(int x, int y);
 
     private:
         Mmu *mmu;
 
-        // The screen has width * height * color (color is RGB, hence size 3)
-        Byte screen[SCREEN_WIDTH][SCREEN_HEIGHT][3];
+        // The screen has width * height (color is RGB)
+        Color screen[SCREEN_WIDTH][SCREEN_HEIGHT];
 
         void renderBackground(Byte lcdControl);
         void renderSprites(Byte lcdControl);

@@ -49,7 +49,7 @@ void loadGame(Byte *cartridge, const char *rom)
 {
     FILE *in;
     in = fopen(rom, "rb");
-    fread(cartridge, 1, 0x200000, in);
+    fread(cartridge, 1, CARTRIDGE_SIZE, in);
     fclose(in);
 }
 
@@ -65,9 +65,9 @@ int main()
     // Not all of this memory is loaded into system memory at
     // one given moment (necessarily). Only 0x8000 bytes are stored
     // in memoery at a given time so store the ROM memory separately
-    Byte cartridge[0x200000];
+    Byte cartridge[CARTRIDGE_SIZE];
     memset(cartridge, 0, sizeof(cartridge));
-    loadGame(cartridge, "tetris.gb");
+    loadGame(cartridge, "cpu_instrs.gb");
 
     // This is just a debug loop to see if data was loaded into
     // memory correctly - print out some instructions (start where PC would be)

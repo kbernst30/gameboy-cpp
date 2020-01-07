@@ -11,9 +11,13 @@
 int Cpu::execute() {
     int cycles;
 
+    // printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
+
     if (!this->halted)
     {
         Byte opcode = this->mmu->readMemory(this->programCounter);
+        // printf("OPCODE: 0x%.2x PC: 0x%.4x\n", opcode, this->programCounter);
+
         this->programCounter++;
         cycles = this->doOpcode(opcode);
     }
@@ -210,13 +214,13 @@ int Cpu::doOpcode(Byte opcode)
         case 0x77: this->mmu->writeMemory(this->hl.reg, this->af.parts.hi);        return 8;  // LD (HL), A = 8 cycles
         case 0xEA: this->mmu->writeMemory(this->getNextWord(), this->af.parts.hi); return 16; // LD (nn), A = 16 cycles
 
-        // TODO OpCode table specified the next 2 take 2 bytes but I can't figure out why - the second byte would not be used
+        // TODO OpCode table specified the next 2 take 2 bytes but I can't figure out why - the second byte would not be used - add second byte for now
 
         // 8-Bit Load (LD A, (C)) - Load value at address 0xFF00 + value in C into A
-        case 0xF2: this->af.parts.hi = this->mmu->readMemory(0xFF00 + this->bc.parts.lo); return 8; // LD A, (C) = 8 cycles
+        case 0xF2: this->af.parts.hi = this->mmu->readMemory(0xFF00 + this->bc.parts.lo); this->programCounter += 1; return 8; // LD A, (C) = 8 cycles
 
         // 8-Bit Load (LD (C), A) - Load A into address 0xFF00 + value in C
-        case 0xE2: this->mmu->writeMemory(0xFF00 + this->bc.parts.lo, this->af.parts.hi); return 8; // LD (C), A = 8 cycles
+        case 0xE2: this->mmu->writeMemory(0xFF00 + this->bc.parts.lo, this->af.parts.hi); this->programCounter += 1; return 8; // LD (C), A = 8 cycles
 
         // 8-Bit Load (LD A, (HL-)) - Load value at address HL into A and decrement HL
         case 0x3A: this->af.parts.hi = this->mmu->readMemory(this->hl.reg); this->hl.reg--; return 8; // LD A, (HL-) = 8 cycles
@@ -586,21 +590,21 @@ int Cpu::doOpcode(Byte opcode)
         // Jump - (JP (HL)) - Jump to address contained in HL
         case 0xE9: this->programCounter = this->mmu->readMemory(this->hl.reg); return 4; // JP (HL) - 4 cycles
 
-        // Jump - (JR n) - Add n to current address and jump, n is signed - we incremented PC so subtract one for curreent address
-        case 0x18: this->programCounter = this->programCounter - 1 + ((SignedByte) this->getNextByte()); return 8; // JR n - 8 cycles
+        // Jump - (JR n) - Add n to current address and jump, n is signed
+        case 0x18: this->programCounter = this->programCounter + 1 + ((SignedByte) this->getNextByte()); return 8; // JR n - 8 cycles
 
         // Jump - (JR cc, n) - Add n to current address and jump, n is signed, if cc is true
         // cc = NZ => Z flag is reset
         // cc = Z => Z flag is set
         // cc = NC => C flag is reset
         // cc = C => C flag is set
-        case 0x20: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR NZ, n - 8 cycles
-        case 0x28: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;   return 8; // JR Z, n - 8 cycles
-        case 0x30: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1; return 8; // JR NC, n - 8 cycles
-        case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter - 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR C, n - 8 cycles
+        case 0x20: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR NZ, n - 8 cycles
+        case 0x28: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;   return 8; // JR Z, n - 8 cycles
+        case 0x30: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1; return 8; // JR NC, n - 8 cycles
+        case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR C, n - 8 cycles
 
-        // Call - (CALL nn) - Push address of next instruction (current PC) onto stack and then jump to address nn
-        case 0xCD: this->pushWordTostack(this->programCounter); this->programCounter = this->getNextWord(); return 12; // CALL nnn - 12 cycles
+        // Call - (CALL nn) - Push address of next instruction (current PC + 2 as inst takes 3 bytes) onto stack and then jump to address nn
+        case 0xCD: this->pushWordTostack(this->programCounter + 2); this->programCounter = this->getNextWord(); return 12; // CALL nnn - 12 cycles
 
         // Call - (CALL cc, nn) - Call address nn, immediate two byte value, if cc is true
         // cc = NZ => Z flag is reset
@@ -694,7 +698,10 @@ int Cpu::doOpcode(Byte opcode)
         // Return - (RETI) - Pop two bytes from stack and jump to that address, then enable interrupts
         case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 8; // RETI - 8 cycles
 
-        default: std::cout << "unknown op: 0x" << std::hex << opcode << std::endl; return 4;
+        default:
+            printf("unknown op: 0x%.2x\n", opcode);
+            printf("PC was at 0x%.4x\n", this->programCounter);
+            return 4;
     }
 }
 
@@ -1224,10 +1231,19 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     if (result > 0xFF)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+    else
+    {
+        resetBit(&(this->af.parts.lo), CARRY_BIT);
     }
 
     Word lowerNibble = *reg & 0xF;
@@ -1235,6 +1251,11 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
 
     *reg = (Byte) (result & 0xFF);
 }
@@ -1255,11 +1276,20 @@ void Cpu::do16BitRegisterAdd(Word *reg, Byte value)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
 
     Word lowerTwelve = *reg & 0xFFF;
     if (lowerTwelve + (value & 0xFFF) > 0xFFF)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
 
     *reg = (Word) (result & 0xFFFF);
@@ -1286,17 +1316,32 @@ void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     if (*reg < toSubtract)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
 
     Word lowerNibble = *reg & 0xF;
     if ((toSubtract & 0xF) < lowerNibble)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
 
     *reg = (Byte) ((*reg - toSubtract) & 0xFF);
 }
@@ -1314,6 +1359,10 @@ void Cpu::do8BitRegisterAnd(Byte *reg, Byte value)
     if (*reg == 0)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
     }
 
     setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
@@ -1335,6 +1384,11 @@ void Cpu::do8BitRegisterOr(Byte *reg, Byte value)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
@@ -1355,6 +1409,11 @@ void Cpu::do8BitRegisterXor(Byte *reg, Byte value)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
@@ -1375,16 +1434,30 @@ void Cpu::do8BitRegisterCompare(Byte source, Byte value)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     if (source < value)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), CARRY_BIT);
+    }
+
 
     Word lowerNibble = source & 0xF;
     if ((value & 0xF) < lowerNibble)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
 }
 
@@ -1404,12 +1477,22 @@ void Cpu::do8BitRegisterIncrement(Byte *reg)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     Word lowerNibble = *reg & 0xF;
     if (lowerNibble + 1 > 0xF)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
 
     *reg = (Byte) (result & 0xFF);
 }
@@ -1430,12 +1513,22 @@ void Cpu::do8BitRegisterDecrement(Byte *reg)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     Word lowerNibble = *reg & 0xF;
     if (1 < lowerNibble)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+    }
+
 
     *reg = (Byte) (result & 0xFF);
 }
@@ -1453,6 +1546,11 @@ void Cpu::do8BitRegisterSwap(Byte *reg)
     {
         setBit(&(this->af.parts.lo), ZERO_BIT);
     }
+    else
+    {
+        resetBit(&(this->af.parts.lo), ZERO_BIT);
+    }
+
 
     resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
@@ -1477,6 +1575,7 @@ void Cpu::do8BitRegisterRotateLeft(Byte *reg, bool throughCarry)
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    else resetBit(&(this->af.parts.lo), ZERO_BIT);
 }
 
 void Cpu::do8BitRegisterShiftLeft(Byte *reg)
@@ -1496,6 +1595,7 @@ void Cpu::do8BitRegisterShiftLeft(Byte *reg)
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    else resetBit(&(this->af.parts.lo), ZERO_BIT);
 }
 
 void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
@@ -1516,6 +1616,7 @@ void Cpu::do8BitRegisterRotateRight(Byte *reg, bool throughCarry)
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    else resetBit(&(this->af.parts.lo), ZERO_BIT);
 }
 
 void Cpu::do8BitRegisterShiftRight(Byte *reg, bool maintainMsb)
@@ -1542,6 +1643,7 @@ void Cpu::do8BitRegisterShiftRight(Byte *reg, bool maintainMsb)
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
     if (*reg == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    else resetBit(&(this->af.parts.lo), ZERO_BIT);
 }
 
 void Cpu::doTestBit(Byte value, int bit)

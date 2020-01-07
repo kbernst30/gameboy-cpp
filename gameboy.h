@@ -1,6 +1,8 @@
 #ifndef __GAMEBOY_H_INCLUDED__
 #define __GAMEBOY_H_INCLUDED__
 
+#include <SDL2/SDL.h>
+
 #include "cpu.h"
 #include "display.h"
 #include "mmu.h"
@@ -19,6 +21,9 @@ class Gameboy {
         Mmu *mmu;
         Byte *cartridge;
 
+        SDL_Window *window;
+        SDL_Renderer *renderer;
+
         int timerCounter = 1024; // initial value, frequency 4096 (4194304/4096)
         int dividerCounter = 0; // Counts up to 255
         int scanlineCounter = 456; // It takes 456 clock cycles to draw one scanline
@@ -27,7 +32,7 @@ class Gameboy {
         void setClockFrequency();
         void updateDividerCounter(int cycles);
 
-        void update();
+        int update();
         void updateGraphics(int cycles);
         void updateTimers(int cycles);
 
@@ -38,6 +43,7 @@ class Gameboy {
 
         // GUI - OpenGL/SDL
         bool createWindow();
+        void renderGame();
 };
 
 #endif

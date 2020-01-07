@@ -5,9 +5,9 @@
 #include "mmu.h"
 #include "utils.h"
 
-void Display::render()
+Color Display::getPixel(int x, int y)
 {
-
+    return this->screen[x][y];
 }
 
 void Display::drawScanline()
@@ -214,9 +214,7 @@ void Display::renderBackground(Byte lcdControl)
         }
 
         // Set the proper pixel in the screen data
-        screen[i][currentScanline][0] = color.red;
-        screen[i][currentScanline][1] = color.green;
-        screen[i][currentScanline][2] = color.blue;
+        screen[i][currentScanline] = color;
     }
 
 }
@@ -322,9 +320,7 @@ void Display::renderSprites(Byte lcdControl)
                 }
 
                 // Set the proper pixel in the screen data
-                screen[pixel][currentScanline][0] = color.red;
-                screen[pixel][currentScanline][1] = color.green;
-                screen[pixel][currentScanline][2] = color.blue;
+                screen[pixel][currentScanline] = color;
             }
         }
     }

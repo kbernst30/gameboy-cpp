@@ -10,8 +10,7 @@ using namespace std;
 
 void Mmu::loadRom(Byte *cartridge)
 {
-    *(this->cartridge) = *cartridge;
-    // std::copy(std::begin(*cartridge), std::end(*cartridge), std::begin(this->cartridge));
+    this->cartridge = cartridge;
 
     // Load ROM banks 0 and 1 into memory
     for (int i = 0; i < MEMORY_ROM_SIZE; i++)
@@ -104,7 +103,7 @@ void Mmu::writeMemory(Word address, Byte data)
     // As this is read only game data
     if (address < 0x8000)
     {
-        cout << "0x" << std::hex << address << " accessed. Handle Banking..." << endl;
+        // cout << "0x" << std::hex << address << " accessed. Handle Banking..." << endl;
         this->handleBanking(address, data);
     }
 
@@ -121,7 +120,7 @@ void Mmu::writeMemory(Word address, Byte data)
     // Do not allow writing to restricted area (FEA0-FEFF)
     else if (address >= 0xFEA0 && address < 0xFF00)
     {
-        cout << "Attemped to write to restricted address 0x" << std::hex << address << endl;
+        // cout << "Attemped to write to restricted address 0x" << std::hex << address << endl;
     }
 
     // We cannot write here directly - reset to 0

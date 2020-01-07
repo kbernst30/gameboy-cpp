@@ -9,11 +9,11 @@ using namespace std;
 void Gameboy::run(Byte *cartridge) {
     cout << "Gameboy is running" << endl;
 
-    this->cartridge = cartridge;
-
     // Reset state of the Gameboy
     this->cpu->reset();
     this->mmu->reset();
+
+    this->mmu->loadRom(cartridge);
 
     this->createWindow();
 
@@ -24,8 +24,9 @@ void Gameboy::run(Byte *cartridge) {
 
     unsigned int time = SDL_GetTicks();
 
+    int totalCycles = 0;
 
-    // TODO call update 60 times a second (i.e. 60fps)
+    // Call update 60 times a second (i.e. 60fps)
     SDL_Event event;
     while (true)
     {
@@ -37,17 +38,19 @@ void Gameboy::run(Byte *cartridge) {
         if (time + interval < currentTime)
         {
             time = currentTime;
-            std::cout << SDL_GetTicks() << std::endl;
-            this->update();
+            // std::cout << SDL_GetTicks() << std::endl;
+            totalCycles += this->update();
+            cout << "Total Cycles: " << totalCycles << endl;
+            cout << "";
         }
     }
 
-    // SDL_DestroyRenderer(renderer);
-    // SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(this->renderer);
+    SDL_DestroyWindow(this->window);
     SDL_Quit();
 }
 
-void Gameboy::update() {
+int Gameboy::update() {
     // This is the main execution of a "frame"
     // We are targeting 60 FPS
     // The goal here is to run the CPU and
@@ -67,7 +70,8 @@ void Gameboy::update() {
         this->doInterrupts();
     }
 
-    // RenderScreen();
+    this->renderGame();
+    return cycles;
 }
 
 bool Gameboy::isClockEnabled()
@@ -320,16 +324,35 @@ bool Gameboy::createWindow()
 	}
 
 	SDL_Event event;
-    SDL_Renderer *renderer;
-    SDL_Window *window;
     int i;
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, 0, &window, &renderer);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    for (i = 0; i < SCREEN_WIDTH * 2; ++i)
-        SDL_RenderDrawPoint(renderer, i, i);
-    SDL_RenderPresent(renderer);
+    SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &this->window, &this->renderer);
+    SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255);
+    SDL_RenderClear(this->renderer);
+    SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255);
+
+    for (i = 0; i < SCREEN_WIDTH; ++i)
+        SDL_RenderDrawPoint(this->renderer, i, i);
+
+    SDL_RenderPresent(this->renderer);
+
+    return true;
+}
+
+void Gameboy::renderGame()
+{
+    Color pixel;
+
+    for (int x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for (int y = 0; y < SCREEN_HEIGHT; y++)
+        {
+            pixel = this->display->getPixel(x, y);
+            SDL_SetRenderDrawColor(this->renderer, pixel.red, pixel.green, pixel.blue, 255);
+            SDL_RenderDrawPoint(this->renderer, x, y);
+        }
+    }
+
+    SDL_RenderPresent(this->renderer);
 }
