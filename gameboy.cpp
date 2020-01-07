@@ -73,13 +73,13 @@ int Gameboy::update() {
         this->updateGraphics(cycles);
         this->doInterrupts();
 
-        debugCounter++;
-        if (debugCounter == debugNum)
-        {
-            cout << "Cycles: " << cycles << endl;
-            this->cpu->debug();
-            debugCounter = 0;
-        }
+        // debugCounter++;
+        // if (debugCounter == debugNum)
+        // {
+        //     cout << "Cycles: " << cycles << endl;
+        //     this->cpu->debug();
+        //     debugCounter = 0;
+        // }
     }
 
     this->renderGame();
@@ -361,9 +361,12 @@ void Gameboy::renderGame()
         for (int y = 0; y < SCREEN_HEIGHT; y++)
         {
             pixel = this->display->getPixel(x, y);
+            // cout << pixel.red << "|" << pixel.green << "|" << pixel.blue << " ";
             SDL_SetRenderDrawColor(this->renderer, pixel.red, pixel.green, pixel.blue, 255);
             SDL_RenderDrawPoint(this->renderer, x, y);
         }
+
+        // cout << endl;
     }
 
     SDL_RenderPresent(this->renderer);

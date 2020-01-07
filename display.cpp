@@ -42,7 +42,7 @@ void Display::renderBackground(Byte lcdControl)
     // background as well as the Window
     Byte scrollX = this->mmu->readMemory(SCROLL_X_ADDR);
     Byte scrollY = this->mmu->readMemory(SCROLL_Y_ADDR);
-    Byte windowX = this->mmu->readMemory(WINDOW_X_ADDR);
+    Byte windowX = this->mmu->readMemory(WINDOW_X_ADDR) - 7;
     Byte windowY = this->mmu->readMemory(WINDOW_Y_ADDR);
 
     // We need to determine if the current scanline we are drawing
@@ -319,6 +319,16 @@ void Display::renderSprites(Byte lcdControl)
                     continue;
                 }
 
+                // Background priority - If pixel should be behind the background, don't draw it
+                if (isBitSet(attributes, 7))
+                {
+                    if (screen[currentScanline][pixel].red != 255 || screen[currentScanline][pixel].green != 255 || screen[currentScanline][pixel].blue != 255)
+                    {
+                        continue;
+                    }
+                }
+
+
                 // Set the proper pixel in the screen data
                 screen[pixel][currentScanline] = color;
             }
@@ -341,10 +351,10 @@ Color Display::getColor(int colorData, Word paletteAddr)
     //  00 - Bits 1 and 0
     switch (colorData)
     {
-        case 11: colorBits = (getBitVal(palette, 7) << 1) | getBitVal(palette, 6); break;
-        case 10: colorBits = (getBitVal(palette, 5) << 1) | getBitVal(palette, 4); break;
-        case 01: colorBits = (getBitVal(palette, 3) << 1) | getBitVal(palette, 2); break;
-        case 00: colorBits = (getBitVal(palette, 1) << 1) | getBitVal(palette, 0); break;
+        case 3: colorBits = (getBitVal(palette, 7) << 1) | getBitVal(palette, 6); break;
+        case 2: colorBits = (getBitVal(palette, 5) << 1) | getBitVal(palette, 4); break;
+        case 1: colorBits = (getBitVal(palette, 3) << 1) | getBitVal(palette, 2); break;
+        case 0: colorBits = (getBitVal(palette, 1) << 1) | getBitVal(palette, 0); break;
     }
 
     // We will have two bits now that map to colors as follows:
@@ -354,10 +364,10 @@ Color Display::getColor(int colorData, Word paletteAddr)
     //  11 = Black = 0x000000
     switch (colorBits)
     {
-        case 00: color.red = 0xFF; color.green = 0xFF; color.blue = 0xFF; break;
-        case 01: color.red = 0xCC; color.green = 0xCC; color.blue = 0xCC; break;;
-        case 10: color.red = 0x77; color.green = 0x77; color.blue = 0x77; break;;
-        case 11: color.red = 0x00; color.green = 0x00; color.blue = 0x00; break;;
+        case 0: color.red = 0xFF; color.green = 0xFF; color.blue = 0xFF; break;
+        case 1: color.red = 0xCC; color.green = 0xCC; color.blue = 0xCC; break;;
+        case 2: color.red = 0x77; color.green = 0x77; color.blue = 0x77; break;;
+        case 3: color.red = 0x00; color.green = 0x00; color.blue = 0x00; break;;
     }
 
     return color;
