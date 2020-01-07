@@ -149,6 +149,16 @@ const int SPRITE_COLOR_PALETTE_2_ADDR = 0xFF49;
 // the memory range starting from here
 const int SPRITE_ATTRIBUTE_TABLE_ADDR = 0xFE00;
 
+// The joypad register is found here
+// Bits 7 and 6 are not used
+// Bit 5 specifies if we are checking standard buttons (i.e. A, B)
+// Bit 4 specifies if we are checking direction buttons
+// Bit 3 specified if Down or Start is pressed (0 is pressed)
+// Bit 2 specified if Up or Select is pressed (0 is pressed)
+// Bit 1 specified if Left or B is pressed (0 is pressed)
+// Bit 0 specified if Right or A is pressed (0 is pressed)
+const int JOYPAD_REGISTER_ADDR = 0xFF00;
+
 /* -------------------------Util Functions--------------------------- */
 
 template <typename T>
