@@ -612,7 +612,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 12 : 8; // JR C, n - 12/8 cycles
 
         // Call - (CALL nn) - Push address of next instruction (current PC + 2 as inst takes 3 bytes) onto stack and then jump to address nn
-        case 0xCD: this->pushWordTostack(this->programCounter + 2); this->programCounter = this->getNextWord(); return 12; // CALL nnn - 12 cycles
+        case 0xCD: this->pushWordTostack(this->programCounter + 2); this->programCounter = this->getNextWord(); return 24; // CALL nnn - 24 cycles
 
         // Call - (CALL cc, nn) - Call address nn, immediate two byte value, if cc is true
         // cc = NZ => Z flag is reset
@@ -691,7 +691,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0xFF: this->pushWordTostack(this->programCounter); this->programCounter = 0x38; return 16; // RST 38 - 16 cycles
 
         // Return - (RET) - Pop two bytes from stack and jump to that address
-        case 0xC9: this->programCounter = this->popWordFromStack(); return 8; // RET - 8 cycles
+        case 0xC9: this->programCounter = this->popWordFromStack(); return 16; // RET - 16 cycles
 
         // Return - (RET cc) - Return if cc is true
         // cc = NZ => Z flag is reset
@@ -704,7 +704,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0xD8: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 20 : 8; // RET C - 20/8 cycles
 
         // Return - (RETI) - Pop two bytes from stack and jump to that address, then enable interrupts
-        case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 8; // RETI - 8 cycles
+        case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 16; // RETI - 16 cycles
 
         default:
             printf("unknown op: 0x%.2x\n", opcode);
