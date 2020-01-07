@@ -56,10 +56,16 @@ void Cpu::reset()
     // This is the initial state of the CPU registers
     // program counter, and stack pointer. The following
     // is documented in Gameboy architecture
-    this->af.reg = 0x01B0;
-    this->bc.reg = 0x0013;
-    this->de.reg = 0x00D8;
-    this->hl.reg = 0x014D;
+    // this->af.reg = 0x01B0;
+    // this->bc.reg = 0x0013;
+    // this->de.reg = 0x00D8;
+    // this->hl.reg = 0x014D;
+
+    // I have seen some conflicting values for start of these regisers. Here are the alternate values
+    this->af.reg = 0x1180;
+    this->bc.reg = 0x0000;
+    this->de.reg = 0xFF56;
+    this->hl.reg = 0x00D0;
 
     this->programCounter = 0x100;
     this->stackPointer.reg = 0xFFFE;
@@ -368,15 +374,15 @@ int Cpu::doOpcode(Byte opcode)
         case 0xE6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->getNextByte());                 return 8; // AND n - 8 cycles
 
         // 8 Bit ALU - (OR n) - OR n with A
-        case 0xB7: this->do8BitRegisterAnd(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // OR A - 4 cycles
-        case 0xB0: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // OR B - 4 cycles
-        case 0xB1: this->do8BitRegisterAnd(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // OR C - 4 cycles
-        case 0xB2: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // OR D - 4 cycles
-        case 0xB3: this->do8BitRegisterAnd(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // OR E - 4 cycles
-        case 0xB4: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // OR H - 4 cycles
-        case 0xB5: this->do8BitRegisterAnd(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // OR L - 4 cycles
-        case 0xB6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // OR (HL) - 8 cycles
-        case 0xF6: this->do8BitRegisterAnd(&(this->af.parts.hi), this->getNextByte());                 return 8; // OR n - 8 cycles
+        case 0xB7: this->do8BitRegisterOr(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // OR A - 4 cycles
+        case 0xB0: this->do8BitRegisterOr(&(this->af.parts.hi), this->bc.parts.hi);                   return 4; // OR B - 4 cycles
+        case 0xB1: this->do8BitRegisterOr(&(this->af.parts.hi), this->bc.parts.lo);                   return 4; // OR C - 4 cycles
+        case 0xB2: this->do8BitRegisterOr(&(this->af.parts.hi), this->de.parts.hi);                   return 4; // OR D - 4 cycles
+        case 0xB3: this->do8BitRegisterOr(&(this->af.parts.hi), this->de.parts.lo);                   return 4; // OR E - 4 cycles
+        case 0xB4: this->do8BitRegisterOr(&(this->af.parts.hi), this->hl.parts.hi);                   return 4; // OR H - 4 cycles
+        case 0xB5: this->do8BitRegisterOr(&(this->af.parts.hi), this->hl.parts.lo);                   return 4; // OR L - 4 cycles
+        case 0xB6: this->do8BitRegisterOr(&(this->af.parts.hi), this->mmu->readMemory(this->hl.reg)); return 8; // OR (HL) - 8 cycles
+        case 0xF6: this->do8BitRegisterOr(&(this->af.parts.hi), this->getNextByte());                 return 8; // OR n - 8 cycles
 
         // 8 Bit ALU - (XOR n) - XOR n with A
         case 0xAF: this->do8BitRegisterXor(&(this->af.parts.hi), this->af.parts.hi);                   return 4; // XOR A - 4 cycles
