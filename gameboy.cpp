@@ -6,6 +6,9 @@
 
 using namespace std;
 
+int debugNum = 10;
+int debugCounter = 0;
+
 void Gameboy::run(Byte *cartridge) {
     cout << "Gameboy is running" << endl;
 
@@ -40,8 +43,8 @@ void Gameboy::run(Byte *cartridge) {
             time = currentTime;
             // std::cout << SDL_GetTicks() << std::endl;
             totalCycles += this->update();
-            cout << "Total Cycles: " << totalCycles << endl;
-            this->cpu->debug();
+            // cout << "Total Cycles: " << totalCycles << endl;
+            // this->cpu->debug();
             cout << "";
         }
     }
@@ -53,7 +56,7 @@ void Gameboy::run(Byte *cartridge) {
 
 int Gameboy::update() {
     // This is the main execution of a "frame"
-    // We are targeting 60 FPS
+    // We are targeting ~60 FPS
     // The goal here is to run the CPU and
     // execute as many instructions per frame as we can
     // Each Instruction takes a certain number of clock cycles and
@@ -69,6 +72,14 @@ int Gameboy::update() {
         this->updateTimers(cycles);
         this->updateGraphics(cycles);
         this->doInterrupts();
+
+        debugCounter++;
+        if (debugCounter == debugNum)
+        {
+            cout << "Cycles: " << cycles << endl;
+            this->cpu->debug();
+            debugCounter = 0;
+        }
     }
 
     this->renderGame();

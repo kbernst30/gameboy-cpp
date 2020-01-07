@@ -590,10 +590,10 @@ int Cpu::doOpcode(Byte opcode)
         // cc = Z => Z flag is set
         // cc = NC => C flag is reset
         // cc = C => C flag is set
-        case 0xC2: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP NZ, nn - 12 cycles
-        case 0xCA: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;   return 12; // JP Z, nn - 12 cycles
-        case 0xD2: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2; return 12; // JP NC, nn - 12 cycles
-        case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return 12; // JP C, nn - 12 cycles
+        case 0xC2: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;  return !isBitSet(this->af.parts.lo, ZERO_BIT) ? 16 : 12; // JP NZ, nn - 16/12 cycles
+        case 0xCA: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->getNextWord() : this->programCounter + 2;   return isBitSet(this->af.parts.lo, ZERO_BIT) ? 16 : 12; // JP Z, nn - 16/12 cycles
+        case 0xD2: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2; return !isBitSet(this->af.parts.lo, CARRY_BIT) ? 16 : 12; // JP NC, nn - 16/12 cycles
+        case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 16 : 12; // JP C, nn - 16/12 cycles
 
         // Jump - (JP (HL)) - Jump to address contained in HL
         case 0xE9: this->programCounter = this->mmu->readMemory(this->hl.reg); return 4; // JP (HL) - 4 cycles
@@ -606,10 +606,10 @@ int Cpu::doOpcode(Byte opcode)
         // cc = Z => Z flag is set
         // cc = NC => C flag is reset
         // cc = C => C flag is set
-        case 0x20: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR NZ, n - 8 cycles
-        case 0x28: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;   return 8; // JR Z, n - 8 cycles
-        case 0x30: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1; return 8; // JR NC, n - 8 cycles
-        case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return 8; // JR C, n - 8 cycles
+        case 0x20: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return !isBitSet(this->af.parts.lo, ZERO_BIT) ? 12 : 8; // JR NZ, n - 12/8 cycles
+        case 0x28: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;   return isBitSet(this->af.parts.lo, ZERO_BIT) ? 12 : 8; // JR Z, n - 12/8 cycles
+        case 0x30: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1; return !isBitSet(this->af.parts.lo, CARRY_BIT) ? 12 : 8; // JR NC, n - 12/8 cycles
+        case 0x38: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->programCounter + 1 + ((SignedByte) this->getNextByte()) : this->programCounter + 1;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 12 : 8; // JR C, n - 12/8 cycles
 
         // Call - (CALL nn) - Push address of next instruction (current PC + 2 as inst takes 3 bytes) onto stack and then jump to address nn
         case 0xCD: this->pushWordTostack(this->programCounter + 2); this->programCounter = this->getNextWord(); return 12; // CALL nnn - 12 cycles
@@ -619,65 +619,65 @@ int Cpu::doOpcode(Byte opcode)
         // cc = Z => Z flag is set
         // cc = NC => C flag is reset
         // cc = C => C flag is set
-        // CALL NZ, nn - 12 cycles
+        // CALL NZ, nn - 24/12 cycles
         case 0xC4:
         {
             if (!isBitSet(this->af.parts.lo, ZERO_BIT))
             {
                 this->pushWordTostack(this->programCounter + 2);
                 this->programCounter = this->getNextWord();
+                return 24;
             }
             else
             {
                 this->programCounter += 2;
+                return 12;
             }
-
-            return 12;
         }
-        // CALL Z, nn - 12 cycles
+        // CALL Z, nn - 24/12 cycles
         case 0xCC:
         {
             if (isBitSet(this->af.parts.lo, ZERO_BIT))
             {
                 this->pushWordTostack(this->programCounter + 2);
                 this->programCounter = this->getNextWord();
+                return 24;
             }
             else
             {
                 this->programCounter += 2;
+                return 12;
             }
-
-            return 12;
         }
-        // CALL NC, nn - 12 cycles
+        // CALL NC, nn - 24/12 cycles
         case 0xD4:
         {
             if (!isBitSet(this->af.parts.lo, CARRY_BIT))
             {
                 this->pushWordTostack(this->programCounter + 2);
                 this->programCounter = this->getNextWord();
+                return 24;
             }
             else
             {
                 this->programCounter += 2;
+                return 12;
             }
-
-            return 12;
         }
-        // CALL C, nn - 12 cycles
+        // CALL C, nn - 24 cycles
         case 0xDC:
         {
             if (isBitSet(this->af.parts.lo, CARRY_BIT))
             {
                 this->pushWordTostack(this->programCounter + 2);
                 this->programCounter = this->getNextWord();
+                return 24;
             }
             else
             {
                 this->programCounter += 2;
+                return 12;
             }
-
-            return 12;
         }
 
         // Restart - (RST n) - Push present address onto stack, jump to $0000 + n
@@ -698,10 +698,10 @@ int Cpu::doOpcode(Byte opcode)
         // cc = Z => Z flag is set
         // cc = NC => C flag is reset
         // cc = C => C flag is set
-        case 0xC0: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;  return 8; // RET NZ - 8 cycles
-        case 0xC8: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;   return 8; // RET Z - 8 cycles
-        case 0xD0: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter; return 8; // RET NC - 8 cycles
-        case 0xD8: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter;  return 8; // RET C - 8 cycles
+        case 0xC0: this->programCounter = !isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;  return !isBitSet(this->af.parts.lo, ZERO_BIT) ? 20 : 8; // RET NZ - 20/8 cycles
+        case 0xC8: this->programCounter = isBitSet(this->af.parts.lo, ZERO_BIT) ? this->popWordFromStack() : this->programCounter;   return isBitSet(this->af.parts.lo, ZERO_BIT) ? 20 : 8; // RET Z - 20/8 cycles
+        case 0xD0: this->programCounter = !isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter; return !isBitSet(this->af.parts.lo, CARRY_BIT) ? 20 : 8; // RET NC - 20/8 cycles
+        case 0xD8: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->popWordFromStack() : this->programCounter;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 20 : 8; // RET C - 20/8 cycles
 
         // Return - (RETI) - Pop two bytes from stack and jump to that address, then enable interrupts
         case 0xD9: this->programCounter = this->popWordFromStack(); this->interruptMaster = true; return 8; // RETI - 8 cycles
