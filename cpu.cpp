@@ -599,7 +599,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0xE9: this->programCounter = this->mmu->readMemory(this->hl.reg); return 4; // JP (HL) - 4 cycles
 
         // Jump - (JR n) - Add n to current address and jump, n is signed
-        case 0x18: this->programCounter = this->programCounter + 1 + ((SignedByte) this->getNextByte()); return 8; // JR n - 8 cycles
+        case 0x18: this->programCounter = this->programCounter + 1 + ((SignedByte) this->getNextByte()); return 12; // JR n - 12 cycles
 
         // Jump - (JR cc, n) - Add n to current address and jump, n is signed, if cc is true
         // cc = NZ => Z flag is reset
