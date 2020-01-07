@@ -583,7 +583,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); return 4; // RRA - 4 cycles
 
         // Jump - (JP nn) - Jump to address nn, immediate two byte value
-        case 0xC3: this->programCounter = this->getNextWord(); return 12; // JP nn - 12 cycles
+        case 0xC3: this->programCounter = this->getNextWord(); return 16; // JP nn - 16 cycles
 
         // Jump - (JP cc, nn) - Jump to address nn, immediate two byte value, if cc is true
         // cc = NZ => Z flag is reset
@@ -681,14 +681,14 @@ int Cpu::doOpcode(Byte opcode)
         }
 
         // Restart - (RST n) - Push present address onto stack, jump to $0000 + n
-        case 0xC7: this->pushWordTostack(this->programCounter); this->programCounter = 0x00; return 32; // RST 00 - 32 cycles
-        case 0xCF: this->pushWordTostack(this->programCounter); this->programCounter = 0x08; return 32; // RST 08 - 32 cycles
-        case 0xD7: this->pushWordTostack(this->programCounter); this->programCounter = 0x10; return 32; // RST 10 - 32 cycles
-        case 0xDF: this->pushWordTostack(this->programCounter); this->programCounter = 0x18; return 32; // RST 18 - 32 cycles
-        case 0xE7: this->pushWordTostack(this->programCounter); this->programCounter = 0x20; return 32; // RST 20 - 32 cycles
-        case 0xEF: this->pushWordTostack(this->programCounter); this->programCounter = 0x28; return 32; // RST 28 - 32 cycles
-        case 0xF7: this->pushWordTostack(this->programCounter); this->programCounter = 0x30; return 32; // RST 30 - 32 cycles
-        case 0xFF: this->pushWordTostack(this->programCounter); this->programCounter = 0x38; return 32; // RST 38 - 32 cycles
+        case 0xC7: this->pushWordTostack(this->programCounter); this->programCounter = 0x00; return 16; // RST 00 - 16 cycles
+        case 0xCF: this->pushWordTostack(this->programCounter); this->programCounter = 0x08; return 16; // RST 08 - 16 cycles
+        case 0xD7: this->pushWordTostack(this->programCounter); this->programCounter = 0x10; return 16; // RST 10 - 16 cycles
+        case 0xDF: this->pushWordTostack(this->programCounter); this->programCounter = 0x18; return 16; // RST 18 - 16 cycles
+        case 0xE7: this->pushWordTostack(this->programCounter); this->programCounter = 0x20; return 16; // RST 20 - 16 cycles
+        case 0xEF: this->pushWordTostack(this->programCounter); this->programCounter = 0x28; return 16; // RST 28 - 16 cycles
+        case 0xF7: this->pushWordTostack(this->programCounter); this->programCounter = 0x30; return 16; // RST 30 - 16 cycles
+        case 0xFF: this->pushWordTostack(this->programCounter); this->programCounter = 0x38; return 16; // RST 38 - 16 cycles
 
         // Return - (RET) - Pop two bytes from stack and jump to that address
         case 0xC9: this->programCounter = this->popWordFromStack(); return 8; // RET - 8 cycles
