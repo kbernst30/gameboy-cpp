@@ -41,6 +41,7 @@ void Gameboy::run(Byte *cartridge) {
             // std::cout << SDL_GetTicks() << std::endl;
             totalCycles += this->update();
             cout << "Total Cycles: " << totalCycles << endl;
+            this->cpu->debug();
             cout << "";
         }
     }

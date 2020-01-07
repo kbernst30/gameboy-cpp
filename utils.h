@@ -27,8 +27,8 @@ struct Color {
 };
 
 const int CLOCK_SPEED = 4194304; // cycles/sec
-const int FRAMES_PER_SECOND = 60;
-const int MAX_CYCLES_PER_FRAME = 69905; // Math.floor(4194304 / 60)
+const double FRAMES_PER_SECOND = 59.73;
+const int MAX_CYCLES_PER_FRAME = 70221; // Math.floor(4194304 / 59.73)
 
 const int CARTRIDGE_SIZE = 0x200000;
 const int MEMORY_ROM_SIZE = 0x8000;

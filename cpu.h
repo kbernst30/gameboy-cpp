@@ -9,6 +9,8 @@ class Cpu {
     public:
         Cpu(Mmu *_mmu) : mmu(_mmu) {};
 
+        void debug();
+
         // Should return number of clock cycles
         // needed for the executing operation
         int execute();
