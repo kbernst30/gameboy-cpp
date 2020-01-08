@@ -10,6 +10,7 @@ class Display {
         Display(Mmu *_mmu) : mmu(_mmu) {};
 
         void drawScanline();
+        void reset();
 
         Color getPixel(int x, int y);
 

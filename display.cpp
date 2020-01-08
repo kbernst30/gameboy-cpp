@@ -30,6 +30,22 @@ void Display::drawScanline()
     }
 }
 
+void Display::reset()
+{
+    for (int x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for (int y = 0; y < SCREEN_HEIGHT; y++)
+        {
+            Color color;
+            color.red = 255;
+            color.green = 255;
+            color.blue = 255;
+
+            this->screen[x][y] = color;
+        }
+    }
+}
+
 void Display::renderBackground(Byte lcdControl)
 {
     Word tileData = 0;
@@ -306,8 +322,6 @@ void Display::renderSprites(Byte lcdControl)
                     continue;
                 }
 
-                // TODO check background priority???
-
                 int xPixel = 0 - tilePixel;
                 xPixel += 7;
                 int pixel = xPosition + xPixel;
@@ -339,7 +353,7 @@ void Display::renderSprites(Byte lcdControl)
 Color Display::getColor(int colorData, Word paletteAddr)
 {
     Color color;
-    int colorBits;
+    int colorBits = 0;
 
     Byte palette = this->mmu->readMemory(paletteAddr);
 
@@ -355,6 +369,7 @@ Color Display::getColor(int colorData, Word paletteAddr)
         case 2: colorBits = (getBitVal(palette, 5) << 1) | getBitVal(palette, 4); break;
         case 1: colorBits = (getBitVal(palette, 3) << 1) | getBitVal(palette, 2); break;
         case 0: colorBits = (getBitVal(palette, 1) << 1) | getBitVal(palette, 0); break;
+        default: printf("UH OH\n");
     }
 
     // We will have two bits now that map to colors as follows:
@@ -365,9 +380,10 @@ Color Display::getColor(int colorData, Word paletteAddr)
     switch (colorBits)
     {
         case 0: color.red = 0xFF; color.green = 0xFF; color.blue = 0xFF; break;
-        case 1: color.red = 0xCC; color.green = 0xCC; color.blue = 0xCC; break;;
-        case 2: color.red = 0x77; color.green = 0x77; color.blue = 0x77; break;;
-        case 3: color.red = 0x00; color.green = 0x00; color.blue = 0x00; break;;
+        case 1: color.red = 0xCC; color.green = 0xCC; color.blue = 0xCC; break;
+        case 2: color.red = 0x77; color.green = 0x77; color.blue = 0x77; break;
+        case 3: color.red = 0x00; color.green = 0x00; color.blue = 0x00; break;
+        default: printf("UH OH\n");
     }
 
     return color;

@@ -15,6 +15,7 @@ void Gameboy::run(Byte *cartridge) {
     // Reset state of the Gameboy
     this->cpu->reset();
     this->mmu->reset();
+    this->display->reset();
 
     this->mmu->loadRom(cartridge);
 
@@ -64,7 +65,7 @@ int Gameboy::update() {
     // As soon as we have executed as many cycles as we can for the frame, we can
     // render the screen
 
-    int cycles;
+    int cycles = 0;
     while (cycles < MAX_CYCLES_PER_FRAME)
     {
         cycles += this->cpu->execute();
@@ -335,7 +336,6 @@ bool Gameboy::createWindow()
 		return false;
 	}
 
-	SDL_Event event;
     int i;
 
     SDL_Init(SDL_INIT_VIDEO);

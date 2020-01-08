@@ -11,15 +11,14 @@
 class Gameboy {
 
     public:
-        Gameboy(Mmu *_mmu, Cpu *_cpu, Display *_display) : cpu(_cpu), mmu(_mmu), display(_display) {};
+        Gameboy(Mmu *_mmu, Cpu *_cpu, Display *_display) : mmu(_mmu), cpu(_cpu), display(_display) {};
 
         void run(Byte *cartridge);
 
     private:
+        Mmu *mmu;
         Cpu *cpu;
         Display *display;
-        Mmu *mmu;
-        Byte *cartridge;
 
         SDL_Window *window;
         SDL_Renderer *renderer;
