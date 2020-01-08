@@ -12,12 +12,12 @@ int debugCounter = 0;
 void Gameboy::run(Byte *cartridge) {
     cout << "Gameboy is running" << endl;
 
+    this->mmu->loadRom(cartridge);
+
     // Reset state of the Gameboy
     this->cpu->reset();
     this->mmu->reset();
     this->display->reset();
-
-    this->mmu->loadRom(cartridge);
 
     this->createWindow();
 
@@ -83,7 +83,8 @@ int Gameboy::update() {
         // }
     }
 
-    this->renderGame();
+    // this->renderGame();
+    this->debugRender();
     return cycles;
 }
 
@@ -342,10 +343,10 @@ bool Gameboy::createWindow()
     SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &this->window, &this->renderer);
     SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255);
     SDL_RenderClear(this->renderer);
-    SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255);
+    // SDL_SetRenderDrawColor(this->renderer, 0, 255, 0, 255);
 
-    for (i = 0; i < SCREEN_WIDTH; ++i)
-        SDL_RenderDrawPoint(this->renderer, i, i);
+    // for (i = 0; i < SCREEN_WIDTH; ++i)
+    //     SDL_RenderDrawPoint(this->renderer, i, i);
 
     SDL_RenderPresent(this->renderer);
 
@@ -370,4 +371,59 @@ void Gameboy::renderGame()
     }
 
     SDL_RenderPresent(this->renderer);
+}
+
+void Gameboy::debugRender()
+{
+    // This is a debug render to dump every tile out to the screen
+    if (this->debug)
+    {
+        int y = 0;
+        int screen_x = 0;
+        int screen_y = 0;
+
+        for (int i = (0x8000); i < (0x8800); i += 2)
+        {
+
+            if (screen_x > SCREEN_WIDTH)
+            {
+                screen_x = 0;
+                screen_y += 8;
+                if (screen_y > SCREEN_HEIGHT)
+                {
+                    continue;
+                }
+            }
+
+            for (int j = 0; j < 8; j++)
+            {
+                int p = (((this->mmu->readMemory(i + 1) >> (7 - j)) & 1) << 1 ) | ((this->mmu->readMemory(i) >> (7 - j)) & 1);
+                // cout << (p > 0 ? "xx" : "  ");
+                if (p > 0)
+                {
+                    this->debug = false;
+                    SDL_SetRenderDrawColor(this->renderer, 0, 0, 0, 255);
+                }
+                else
+                {
+                    SDL_SetRenderDrawColor(this->renderer, 255, 255, 255, 255);
+                }
+
+                SDL_RenderDrawPoint(this->renderer, screen_x + j, screen_y + y);
+
+                // this->display->setPixel(screen_x + j, screen_y + y);
+            }
+
+            cout << endl;
+            y++;
+            if (y == 8)
+            {
+                y = 0;
+                screen_x += 8;
+                printf("----------------\n");
+            }
+        }
+
+        SDL_RenderPresent(this->renderer);
+    }
 }

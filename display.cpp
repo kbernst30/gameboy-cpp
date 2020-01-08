@@ -10,6 +10,18 @@ Color Display::getPixel(int x, int y)
     return this->screen[x][y];
 }
 
+void Display::setPixel(int x, int y)
+{
+    // THis is just used to debug the screen a bit - set data into the screen data
+    // so we can test it
+    Color color;
+    color.red = 0;
+    color.green = 0;
+    color.blue = 0;
+
+    this->screen[x][y] = color;
+}
+
 void Display::drawScanline()
 {
     // Get the value of the LCD control register
@@ -230,7 +242,7 @@ void Display::renderBackground(Byte lcdControl)
         }
 
         // Set the proper pixel in the screen data
-        screen[i][currentScanline] = color;
+        // screen[i][currentScanline] = color;
     }
 
 }
@@ -344,7 +356,7 @@ void Display::renderSprites(Byte lcdControl)
 
 
                 // Set the proper pixel in the screen data
-                screen[pixel][currentScanline] = color;
+                // screen[pixel][currentScanline] = color;
             }
         }
     }

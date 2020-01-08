@@ -18,6 +18,12 @@ void Mmu::loadRom(Byte *cartridge)
         this->memory[i] = cartridge[i];
     }
 
+    // for (int i = 0x8210; i <= 0x821F; i++)
+    // {
+    //     // cout << "0x" << std::hex << this->memory[i] << " ";
+    //     printf("0x%.4x: 0x%.2x\n", i, this->memory[i]);
+    // }
+
     // Once we load the ROM, we need to determine the current bank mode
     // and set the appropriate flag. Memory address 0x147 specifies the current
     // bank mode. If the value is 0, MBC is 0. If it is 1, 2 or 3 it is MBC1 and

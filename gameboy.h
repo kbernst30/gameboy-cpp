@@ -43,6 +43,10 @@ class Gameboy {
         // GUI - OpenGL/SDL
         bool createWindow();
         void renderGame();
+
+        void debugRender();
+
+        bool debug = true;
 };
 
 #endif

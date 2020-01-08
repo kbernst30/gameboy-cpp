@@ -75,6 +75,8 @@ class Mmu {
         bool timerFrequencyChanged = false;
 
         void doDmaTransfer(Byte data);
+
+        bool debug = true;
 };
 
 #endif
