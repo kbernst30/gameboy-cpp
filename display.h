@@ -15,6 +15,7 @@ class Display {
         Color getPixel(int x, int y);
 
         void setPixel(int x, int y);
+        void debug();
 
     private:
         Mmu *mmu;

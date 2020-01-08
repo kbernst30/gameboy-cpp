@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <iostream>
 
 #include "display.h"
 #include "mmu.h"
@@ -20,6 +22,19 @@ void Display::setPixel(int x, int y)
     color.blue = 0;
 
     this->screen[x][y] = color;
+}
+
+void Display::debug()
+{
+    for (int y = 0; y < SCREEN_HEIGHT; y++)
+    {
+        for (int x = 0; x < SCREEN_WIDTH; x++)
+        {
+            std::cout << this->screen[x][y].red << " ";
+        }
+
+        std::cout << std::endl;
+    }
 }
 
 void Display::drawScanline()
@@ -65,6 +80,11 @@ void Display::renderBackground(Byte lcdControl)
     bool isUnsigned = true;
 
     Byte currentScanline = this->mmu->readMemory(CURRENT_SCANLINE_ADDR);
+
+    // if (currentScanline > 1)
+    // {
+    //     printf("0x%.2x\n", currentScanline);
+    // }
 
     // We need to figure out where to draw the visual area of the
     // background as well as the Window
@@ -242,7 +262,7 @@ void Display::renderBackground(Byte lcdControl)
         }
 
         // Set the proper pixel in the screen data
-        // screen[i][currentScanline] = color;
+        screen[i][currentScanline] = color;
     }
 
 }
@@ -356,7 +376,7 @@ void Display::renderSprites(Byte lcdControl)
 
 
                 // Set the proper pixel in the screen data
-                // screen[pixel][currentScanline] = color;
+                screen[pixel][currentScanline] = color;
             }
         }
     }

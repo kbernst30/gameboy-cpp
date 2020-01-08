@@ -83,8 +83,9 @@ int Gameboy::update() {
         // }
     }
 
-    // this->renderGame();
-    this->debugRender();
+    // this->display->debug();
+    this->renderGame();
+    // this->debugRender();
     return cycles;
 }
 
@@ -327,7 +328,7 @@ void Gameboy::setLcdStatus()
     }
 
     // Finally, update the status now in memory
-    this->mmu->writeMemory(CURRENT_SCANLINE_ADDR, lcdStatus);
+    this->mmu->writeMemory(LCD_STATUS_ADDR, lcdStatus);
 }
 
 bool Gameboy::createWindow()
@@ -336,8 +337,6 @@ bool Gameboy::createWindow()
 	{
 		return false;
 	}
-
-    int i;
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &this->window, &this->renderer);
@@ -414,13 +413,13 @@ void Gameboy::debugRender()
                 // this->display->setPixel(screen_x + j, screen_y + y);
             }
 
-            cout << endl;
+            // cout << endl;
             y++;
             if (y == 8)
             {
                 y = 0;
                 screen_x += 8;
-                printf("----------------\n");
+                // printf("----------------\n");
             }
         }
 
