@@ -66,6 +66,7 @@ int Gameboy::update() {
     // render the screen
 
     int cycles = 0;
+    int counter = 0;
     while (cycles < MAX_CYCLES_PER_FRAME)
     {
         cycles += this->cpu->execute();
@@ -81,7 +82,11 @@ int Gameboy::update() {
         //     this->cpu->debug();
         //     debugCounter = 0;
         // }
+
+        counter += 1;
     }
+
+    // cout << "Cycles: " << cycles << " Counter: " << counter << endl;
 
     // this->display->debug();
     this->renderGame();
@@ -422,6 +427,10 @@ void Gameboy::debugRender()
                 // printf("----------------\n");
             }
         }
+
+        Word address = 0x9800;
+        Byte b = this->mmu->readMemory(address);
+        printf("TEST 0x%.2x\n", b);
 
         SDL_RenderPresent(this->renderer);
     }

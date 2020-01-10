@@ -93,6 +93,8 @@ void Display::renderBackground(Byte lcdControl)
     Byte windowX = this->mmu->readMemory(WINDOW_X_ADDR) - 7;
     Byte windowY = this->mmu->readMemory(WINDOW_Y_ADDR);
 
+    printf("");
+
     // We need to determine if the current scanline we are drawing
     // is part of the window as opposed to the background
     // The window sits above the background, but below any sprites
@@ -223,9 +225,19 @@ void Display::renderBackground(Byte lcdControl)
         // up two bytes in memory so we need to account for this
         line *= 2;
 
+        // if (tileLocation != 0x8000 && tileLocation != 0x8800 && tileLocation != 0x8200)
+        // {
+        //     printf("0x%.4x\n", tileLocation);
+        // }
+
         // This is the tile data. Occupying the two bytes in memory
         Byte data1 = this->mmu->readMemory(tileLocation + line);
         Byte data2 = this->mmu->readMemory(tileLocation + line + 1);
+
+        // if (tileAddress == 0x9800)
+        // {
+        //     printf("0x%.4x 0x%.4x 0x%.4x\n", tileLocation, tileIdentificationNumber, tileAddress);
+        // }
 
         // We now have the two bytes that specify the line of the tile
         // To get the pixels (i.e. the right color) we need to combine them

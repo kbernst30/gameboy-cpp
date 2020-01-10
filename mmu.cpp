@@ -105,6 +105,11 @@ Byte Mmu::readMemory(Word address)
 
 void Mmu::writeMemory(Word address, Byte data)
 {
+    if (address == 0x9800)
+    {
+        printf("WRITING 0x9800\n");
+    }
+
     // We cannot write to memory 0x0000 - 0x7FFF
     // As this is read only game data
     if (address < 0x8000)
