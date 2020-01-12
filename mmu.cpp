@@ -90,7 +90,7 @@ Byte Mmu::readMemory(Word address)
     // TODO Is this the best way? Or should we do the swap?
     if (address >= 0x4000 && address < 0x8000)
     {
-        return *(this->cartridge + (address - 0x4000) + ((this->currentRomBank - 1) * 0x4000));
+        return *(this->cartridge + (address - 0x4000) + ((this->currentRomBank) * 0x4000));
     }
 
     // If we are reading from RAM than we should get data in appropriate RAM bank
@@ -107,8 +107,18 @@ void Mmu::writeMemory(Word address, Byte data)
 {
     if (address == 0x9800)
     {
-        printf("WRITING 0x9800\n");
+        // printf("WRITING 0x9800 - 0x%.2x\n", data);
     }
+
+    // Debug
+    if (address == 0xFF02)
+    {
+		// printf("0x%.2x\n", data);
+        if (data == 0x81)
+        {
+            // printf("0x%.2x 0x%.2x\n", data, this->memory[0xFF01]);
+        }
+	}
 
     // We cannot write to memory 0x0000 - 0x7FFF
     // As this is read only game data

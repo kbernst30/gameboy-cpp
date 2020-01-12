@@ -18,17 +18,17 @@ int Cpu::execute()
 {
     int cycles;
 
-    // printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
+    printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
 
-    if (this->programCounter == 0x0ba1)
+    if (this->programCounter == 0xc866)
     {
-        // printf("");
+        printf("");
     }
 
     if (!this->halted)
     {
         Byte opcode = this->mmu->readMemory(this->programCounter);
-        // printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
+        printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
 
         this->programCounter++;
         cycles = this->doOpcode(opcode);
