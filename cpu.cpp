@@ -35,6 +35,7 @@ int Cpu::execute()
     }
     else
     {
+        // printf("PC: 0x%.4x\n", this->programCounter);
         cycles = 4;
     }
 
@@ -107,28 +108,33 @@ void Cpu::serviceInterrupt(int interrupt)
     // Unhalt the CPU
     this->halted = false;
 
-    // Disable the master interrupt
-    this->setInterruptMaster(false);
-
-    // Unset the interrupt is the request register
-    Byte interruptRequest = this->mmu->readMemory(INTERRUPT_REQUEST_ADDR);
-    resetBit(&interruptRequest, interrupt);
-    this->mmu->writeMemory(INTERRUPT_REQUEST_ADDR, interruptRequest);
-
-    // Interrupt routines can be found at the following locations in memory:
-    // V-Blank: 0x40 - bit 0
-    // LCD: 0x48 - bit 1
-    // TIMER: 0x50 - bit 2
-    // JOYPAD: 0x60 - but 4
-    // So we need to push the program counter onto the stack, and then set it
-    // to the location of the appropriate interrupt we are servicing
-    this->pushWordTostack(this->programCounter);
-    switch (interrupt)
+    // Only take action on interrupts if the master switch is enabled
+    if (this->isInterruptMaster())
     {
-        case 0: this->programCounter = 0x40; break;
-        case 1: this->programCounter = 0x48; break;
-        case 2: this->programCounter = 0x50; break;
-        case 4: this->programCounter = 0x60; break;
+
+        // Disable the master interrupt
+        this->setInterruptMaster(false);
+
+        // Unset the interrupt is the request register
+        Byte interruptRequest = this->mmu->readMemory(INTERRUPT_REQUEST_ADDR);
+        resetBit(&interruptRequest, interrupt);
+        this->mmu->writeMemory(INTERRUPT_REQUEST_ADDR, interruptRequest);
+
+        // Interrupt routines can be found at the following locations in memory:
+        // V-Blank: 0x40 - bit 0
+        // LCD: 0x48 - bit 1
+        // TIMER: 0x50 - bit 2
+        // JOYPAD: 0x60 - but 4
+        // So we need to push the program counter onto the stack, and then set it
+        // to the location of the appropriate interrupt we are servicing
+        this->pushWordTostack(this->programCounter);
+        switch (interrupt)
+        {
+            case 0: this->programCounter = 0x40; break;
+            case 1: this->programCounter = 0x48; break;
+            case 2: this->programCounter = 0x50; break;
+            case 4: this->programCounter = 0x60; break;
+        }
     }
 }
 
