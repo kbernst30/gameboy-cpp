@@ -18,17 +18,17 @@ int Cpu::execute()
 {
     int cycles;
 
-    printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
+    // printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
 
-    if (this->programCounter == 0xc866)
+    if (this->programCounter == 0xc920)
     {
-        printf("");
+        // printf("");
     }
 
     if (!this->halted)
     {
         Byte opcode = this->mmu->readMemory(this->programCounter);
-        printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
+        // printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
 
         this->programCounter++;
         cycles = this->doOpcode(opcode);
@@ -170,42 +170,42 @@ int Cpu::doOpcode(Byte opcode)
         case 0x42: this->bc.parts.hi = this->de.parts.hi;                   return 4;  // LD B, D = 4 cycles
         case 0x43: this->bc.parts.hi = this->de.parts.lo;                   return 4;  // LD B, E = 4 cycles
         case 0x44: this->bc.parts.hi = this->hl.parts.hi;                   return 4;  // LD B, H = 4 cycles
-        case 0x45: this->bc.parts.hi = this->hl.parts.hi;                   return 4;  // LD B, L = 4 cycles
+        case 0x45: this->bc.parts.hi = this->hl.parts.lo;                   return 4;  // LD B, L = 4 cycles
         case 0x46: this->bc.parts.hi = this->mmu->readMemory(this->hl.reg); return 8;  // LD B, (HL) = 8 cycles
         case 0x48: this->bc.parts.lo = this->bc.parts.hi;                   return 4;  // LD C, B = 4 cycles
         case 0x49: this->bc.parts.lo = this->bc.parts.lo;                   return 4;  // LD C, C = 4 cycles
         case 0x4A: this->bc.parts.lo = this->de.parts.hi;                   return 4;  // LD C, D = 4 cycles
         case 0x4B: this->bc.parts.lo = this->de.parts.lo;                   return 4;  // LD C, E = 4 cycles
         case 0x4C: this->bc.parts.lo = this->hl.parts.hi;                   return 4;  // LD C, H = 4 cycles
-        case 0x4D: this->bc.parts.lo = this->hl.parts.hi;                   return 4;  // LD C, L = 4 cycles
+        case 0x4D: this->bc.parts.lo = this->hl.parts.lo;                   return 4;  // LD C, L = 4 cycles
         case 0x4E: this->bc.parts.lo = this->mmu->readMemory(this->hl.reg); return 8;  // LD C, (HL) = 8 cycles
         case 0x50: this->de.parts.hi = this->bc.parts.hi;                   return 4;  // LD D, B = 4 cycles
         case 0x51: this->de.parts.hi = this->bc.parts.lo;                   return 4;  // LD D, C = 4 cycles
         case 0x52: this->de.parts.hi = this->de.parts.hi;                   return 4;  // LD D, D = 4 cycles
         case 0x53: this->de.parts.hi = this->de.parts.lo;                   return 4;  // LD D, E = 4 cycles
         case 0x54: this->de.parts.hi = this->hl.parts.hi;                   return 4;  // LD D, H = 4 cycles
-        case 0x55: this->de.parts.hi = this->hl.parts.hi;                   return 4;  // LD D, L = 4 cycles
+        case 0x55: this->de.parts.hi = this->hl.parts.lo;                   return 4;  // LD D, L = 4 cycles
         case 0x56: this->de.parts.hi = this->mmu->readMemory(this->hl.reg); return 8;  // LD D, (HL) = 8 cycles
         case 0x58: this->de.parts.lo = this->bc.parts.hi;                   return 4;  // LD E, B = 4 cycles
         case 0x59: this->de.parts.lo = this->bc.parts.lo;                   return 4;  // LD E, C = 4 cycles
         case 0x5A: this->de.parts.lo = this->de.parts.hi;                   return 4;  // LD E, D = 4 cycles
         case 0x5B: this->de.parts.lo = this->de.parts.lo;                   return 4;  // LD E, E = 4 cycles
         case 0x5C: this->de.parts.lo = this->hl.parts.hi;                   return 4;  // LD E, H = 4 cycles
-        case 0x5D: this->de.parts.lo = this->hl.parts.hi;                   return 4;  // LD E, L = 4 cycles
+        case 0x5D: this->de.parts.lo = this->hl.parts.lo;                   return 4;  // LD E, L = 4 cycles
         case 0x5E: this->de.parts.lo = this->mmu->readMemory(this->hl.reg); return 8;  // LD E, (HL) = 8 cycles
         case 0x60: this->hl.parts.hi = this->bc.parts.hi;                   return 4;  // LD H, B = 4 cycles
         case 0x61: this->hl.parts.hi = this->bc.parts.lo;                   return 4;  // LD H, C = 4 cycles
         case 0x62: this->hl.parts.hi = this->de.parts.hi;                   return 4;  // LD H, D = 4 cycles
         case 0x63: this->hl.parts.hi = this->de.parts.lo;                   return 4;  // LD H, E = 4 cycles
         case 0x64: this->hl.parts.hi = this->hl.parts.hi;                   return 4;  // LD H, H = 4 cycles
-        case 0x65: this->hl.parts.hi = this->hl.parts.hi;                   return 4;  // LD H, L = 4 cycles
+        case 0x65: this->hl.parts.hi = this->hl.parts.lo;                   return 4;  // LD H, L = 4 cycles
         case 0x66: this->hl.parts.hi = this->mmu->readMemory(this->hl.reg); return 8;  // LD H, (HL) = 8 cycles
         case 0x68: this->hl.parts.lo = this->bc.parts.hi;                   return 4;  // LD L, B = 4 cycles
         case 0x69: this->hl.parts.lo = this->bc.parts.lo;                   return 4;  // LD L, C = 4 cycles
         case 0x6A: this->hl.parts.lo = this->de.parts.hi;                   return 4;  // LD L, D = 4 cycles
         case 0x6B: this->hl.parts.lo = this->de.parts.lo;                   return 4;  // LD L, E = 4 cycles
         case 0x6C: this->hl.parts.lo = this->hl.parts.hi;                   return 4;  // LD L, H = 4 cycles
-        case 0x6D: this->hl.parts.lo = this->hl.parts.hi;                   return 4;  // LD L, L = 4 cycles
+        case 0x6D: this->hl.parts.lo = this->hl.parts.lo;                   return 4;  // LD L, L = 4 cycles
         case 0x6E: this->hl.parts.lo = this->mmu->readMemory(this->hl.reg); return 8;  // LD L, (HL) = 8 cycles
         case 0x70: this->mmu->writeMemory(this->hl.reg, this->bc.parts.hi); return 8;  // LD (HL), B = 8 cycles
         case 0x71: this->mmu->writeMemory(this->hl.reg, this->bc.parts.lo); return 8;  // LD (HL), C = 8 cycles
@@ -317,8 +317,8 @@ int Cpu::doOpcode(Byte opcode)
         case 0xD5: this->pushWordTostack(this->de.reg); return 16; // PUSH DE - 16 cycles
         case 0xE5: this->pushWordTostack(this->hl.reg); return 16; // PUSH HL - 16 cycles
 
-        // 16 Bit Load - (POP nn) - Pop two bytes off of the stack into register pair nn
-        case 0xF1: this->af.reg = this->popWordFromStack(); return 12; // POP AF - 12 cycles
+        // 16 Bit Load - (POP nn) - Pop two bytes off of the stack into register pair nn - Make sure lower bits of F are unset
+        case 0xF1: this->af.reg = this->popWordFromStack(); this->af.parts.lo &= 0xF0; return 12; // POP AF - 12 cycles
         case 0xC1: this->bc.reg = this->popWordFromStack(); return 12; // POP BC - 12 cycles
         case 0xD1: this->de.reg = this->popWordFromStack(); return 12; // POP DE - 12 cycles
         case 0xE1: this->hl.reg = this->popWordFromStack(); return 12; // POP HL - 12 cycles
@@ -504,37 +504,41 @@ int Cpu::doOpcode(Byte opcode)
             // This should adjust the value in register A so that it proper BCD represetnation
             // where the value SHOULD be the result of a previous ADD or SUB of two BCD numbers
             // To adjust properly, we need to add or subtract from the current value
-            // TODO I really need to understand this better
-            Byte upper = this->af.parts.hi >> 4;
-            Byte lower = this->af.parts.hi & 0xF;
+            // TODO I really need to understand this better - This is taken from SameBoy src
+            int16_t result = this->af.parts.hi;
+            resetBit(&(this->af.parts.lo), ZERO_BIT);
 
-            if (isBitSet(this->af.parts.lo, SUBTRACT_BIT))
-            {
-                // Previous operation was a subtract
-                // If half carry, we need to subtract 6 from the lower nibble
-                // If carry, we need to subtract 6 from the upper nibble
-                if (isBitSet(this->af.parts.lo, HALF_CARRY_BIT)) lower -= 0x6;
-                if (isBitSet(this->af.parts.lo, CARRY_BIT)) upper -= 6;
+            if (isBitSet(this->af.parts.lo, SUBTRACT_BIT)) {
+                if (isBitSet(this->af.parts.lo, HALF_CARRY_BIT)) {
+                    result = (result - 0x06) & 0xFF;
+                }
+
+                if (isBitSet(this->af.parts.lo, CARRY_BIT)) {
+                    result -= 0x60;
+                }
             }
             else
             {
-                // Previous operation was an add
-                // If half carry or first nibble is greater than 9, we need to add 6 to lower nibble
-                // If carry or second nibble is greater than 9, we need to add 6 from the upper nibble
-                if (isBitSet(this->af.parts.lo, HALF_CARRY_BIT) || lower > 9) lower += 0x6;
-                if (isBitSet(this->af.parts.lo, CARRY_BIT) || upper > 9) upper += 6;
+                if ((isBitSet(this->af.parts.lo, HALF_CARRY_BIT)) || (result & 0x0F) > 0x09) {
+                    result += 0x06;
+                }
+
+                if ((isBitSet(this->af.parts.lo, CARRY_BIT) || result > 0x9F)) {
+                    result += 0x60;
+                }
             }
 
-            Byte bcd = (upper << 4) | lower;
-
-            if (bcd == 0)
-            {
+            if ((result & 0xFF) == 0) {
                 setBit(&(this->af.parts.lo), ZERO_BIT);
             }
 
-            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            if ((result & 0x100) == 0x100) {
+                setBit(&(this->af.parts.lo), CARRY_BIT);
+            }
 
-            this->af.parts.hi = bcd;
+            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
+            this->af.parts.hi = (Byte) (result & 0xFF);
+
             return 4;
         }
 
@@ -607,7 +611,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0xDA: this->programCounter = isBitSet(this->af.parts.lo, CARRY_BIT) ? this->getNextWord() : this->programCounter + 2;  return isBitSet(this->af.parts.lo, CARRY_BIT) ? 16 : 12; // JP C, nn - 16/12 cycles
 
         // Jump - (JP (HL)) - Jump to address contained in HL
-        case 0xE9: this->programCounter = this->mmu->readMemory(this->hl.reg); return 4; // JP (HL) - 4 cycles
+        case 0xE9: this->programCounter = this->hl.reg; return 4; // JP (HL) - 4 cycles
 
         // Jump - (JR n) - Add n to current address and jump, n is signed
         case 0x18: this->programCounter = this->programCounter + 1 + ((SignedByte) this->getNextByte()); return 12; // JR n - 12 cycles

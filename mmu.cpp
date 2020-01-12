@@ -107,7 +107,7 @@ void Mmu::writeMemory(Word address, Byte data)
 {
     if (address == 0x9800)
     {
-        // printf("WRITING 0x9800 - 0x%.2x\n", data);
+        printf("WRITING 0x9800 - 0x%.2x\n", data);
     }
 
     // Debug
@@ -116,7 +116,7 @@ void Mmu::writeMemory(Word address, Byte data)
 		// printf("0x%.2x\n", data);
         if (data == 0x81)
         {
-            // printf("0x%.2x 0x%.2x\n", data, this->memory[0xFF01]);
+            cout << this->memory[0xFF01];
         }
 	}
 
