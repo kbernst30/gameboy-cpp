@@ -191,7 +191,7 @@ template <typename T>
 int getBitVal(T data, int position)
 {
     T test = 1 << position;
-    return data & test;
+    return (data & test) > 0 ? 1 : 0;
 }
 
 #endif
