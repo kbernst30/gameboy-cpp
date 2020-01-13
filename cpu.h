@@ -42,7 +42,7 @@ class Cpu {
         void do8BitLoadToMemory(Word address);
         void do16BitLoad(Word *reg);
         void do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry=false);
-        void do16BitRegisterAdd(Word *reg, Byte value);
+        void do16BitRegisterAdd(Word *reg, Word value);
         void do8BitRegisterSub(Byte *reg, Byte value, bool useCarry=false);
         void do8BitRegisterAnd(Byte *reg, Byte value);
         void do8BitRegisterOr(Byte *reg, Byte value);

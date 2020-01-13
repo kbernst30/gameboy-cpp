@@ -1268,7 +1268,7 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
     *reg = (Byte) (result & 0xFF);
 }
 
-void Cpu::do16BitRegisterAdd(Word *reg, Byte value)
+void Cpu::do16BitRegisterAdd(Word *reg, Word value)
 {
     // This should perform a 16 bit add operation and store
     // the result in register reg
@@ -1276,21 +1276,14 @@ void Cpu::do16BitRegisterAdd(Word *reg, Byte value)
     // THe Subtract flag should be reset
     // The Half-Carry flag should be set if we carry from bit 11
     // The Carry flag should be set if we carry from but 15
+    unsigned long temp = (unsigned long) *reg;
     *reg += value;
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
     resetBit(&(this->af.parts.lo), CARRY_BIT);
     resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
-    if ((((unsigned long) *reg) + ((unsigned long) value)) & 0x10000)
-    {
-        setBit(&(this->af.parts.lo), CARRY_BIT);
-    }
-
-    Word lowerTwelve = *reg & 0xFFF;
-    if ((lowerTwelve + (value & 0xFFF)) & 0x1000)
-    {
-        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
+    if ((temp + ((unsigned long) value)) & 0x10000) setBit(&(this->af.parts.lo), CARRY_BIT);
+    if (((temp & 0xFFF) + (value & 0xFFF)) & 0x1000) setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 }
 
 void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
@@ -1622,16 +1615,9 @@ void Cpu::doTestBit(Byte value, int bit)
     // If 0, set zero flag, 1 otherwise
     // Reset Subtract flag
     // Set half carry flag
-    if (isBitSet(value, bit))
-    {
-        setBit(&(this->af.parts.lo), ZERO_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), ZERO_BIT);
-    }
-
-
     setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), ZERO_BIT);
+
+    if (!isBitSet(value, bit)) setBit(&(this->af.parts.lo), ZERO_BIT);
 }

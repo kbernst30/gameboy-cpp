@@ -167,7 +167,7 @@ bool isBitSet(T data, int position)
     // Return true if bit at position is
     // set in data, false otherwise
     T test = 1 << position;
-    return data & test ? true : false;
+    return (data & test) > 0 ? true : false;
 }
 
 template <typename T>
