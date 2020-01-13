@@ -20,15 +20,20 @@ int Cpu::execute()
 
     // printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
 
-    if (this->programCounter == 0xc920)
-    {
+    // if (this->programCounter == 0xc920)
+    // {
         // printf("");
-    }
+    // }
 
     if (!this->halted)
     {
         Byte opcode = this->mmu->readMemory(this->programCounter);
         // printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
+
+        // if (opcode == 0xDE)
+        // {
+        //     printf("");
+        // }
 
         this->programCounter++;
         cycles = this->doOpcode(opcode);
@@ -279,13 +284,13 @@ int Cpu::doOpcode(Byte opcode)
         case 0xF8:
         {
             SignedByte offset = (SignedByte) this->getNextByte();
-            unsigned int value = this->stackPointer.reg + offset;
+            this->hl.reg = this->stackPointer.reg + offset;
 
             resetBit(&(this->af.parts.lo), ZERO_BIT);
             resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
-            // If we are overflowing the max for a Word (0xFFFF) then set carry bit, otherwise reset
-            if (value > 0xFFFF)
+            // If we are overflowing then set carry bit, otherwise reset
+            if ((this->stackPointer.reg & 0xFF) + (offset & 0xFF) > 0xFF)
             {
                 setBit(&(this->af.parts.lo), CARRY_BIT);
             }
@@ -304,7 +309,6 @@ int Cpu::doOpcode(Byte opcode)
                 resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
             }
 
-            this->hl.reg = (Word) (value & 0xFFFF);
             return 12;
         }
 
@@ -462,13 +466,13 @@ int Cpu::doOpcode(Byte opcode)
         case 0xE8:
         {
             SignedByte offset = (SignedByte) this->getNextByte();
-            unsigned int value = this->stackPointer.reg + offset;
+            this->stackPointer.reg += offset;
 
             resetBit(&(this->af.parts.lo), ZERO_BIT);
             resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
 
             // If we are overflowing the max for a Word (0xFFFF) then set carry bit, otherwise reset
-            if (value > 0xFFFF)
+            if ((this->stackPointer.reg & 0xFF) + (offset & 0xFF) > 0xFF)
             {
                 setBit(&(this->af.parts.lo), CARRY_BIT);
             }
@@ -478,7 +482,7 @@ int Cpu::doOpcode(Byte opcode)
             }
 
             // If we are overflowing lower nibble to upper nibble, then set half carry flag, otherwise reset
-            if ((this->stackPointer.reg & 0xF) + (value & 0xF) > 0xF)
+            if ((this->stackPointer.reg & 0xF) + (offset & 0xF) > 0xF)
             {
                 setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
             }
@@ -487,7 +491,6 @@ int Cpu::doOpcode(Byte opcode)
                 resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
             }
 
-            this->stackPointer.reg = (Word) (value & 0xFFFF);
             return 16;
         }
 
@@ -591,17 +594,17 @@ int Cpu::doOpcode(Byte opcode)
         // Misc - (EI) - Enable interrupts after the NEXT instruction
         case 0xFB: this->willEnableInterrupts = true; return 4; // DI - 4 cycles
 
-        // Rotate - (RLCA) - Rotate A left, Bit 7 to Carry flag
-        case 0x07: this->do8BitRegisterRotateLeft(&(this->af.parts.hi)); return 4; // RLCA - 4 cycles
+        // Rotate - (RLCA) - Rotate A left, Bit 7 to Carry flag - Zero flag must be reset
+        case 0x07: this->do8BitRegisterRotateLeft(&(this->af.parts.hi)); resetBit(&(this->af.parts.lo), ZERO_BIT); return 4; // RLCA - 4 cycles
 
-        // Rotate - (RLA) - Rotate A left, through Carry flag
-        case 0x17: this->do8BitRegisterRotateLeft(&(this->af.parts.hi), true); return 4; // RLA - 4 cycles
+        // Rotate - (RLA) - Rotate A left, through Carry flag - Zero flag must be reset
+        case 0x17: this->do8BitRegisterRotateLeft(&(this->af.parts.hi), true); resetBit(&(this->af.parts.lo), ZERO_BIT); return 4; // RLA - 4 cycles
 
-        // Rotate - (RRCA) - Rotate A right, Bit 7 to Carry flag
-        case 0x0F: this->do8BitRegisterRotateRight(&(this->af.parts.hi)); return 4; // RRCA - 4 cycles
+        // Rotate - (RRCA) - Rotate A right, Bit 7 to Carry flag - Zero flag must be reset
+        case 0x0F: this->do8BitRegisterRotateRight(&(this->af.parts.hi)); resetBit(&(this->af.parts.lo), ZERO_BIT); return 4; // RRCA - 4 cycles
 
-        // Rotate - (RRA) - Rotate A right, through Carry flag
-        case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); return 4; // RRA - 4 cycles
+        // Rotate - (RRA) - Rotate A right, through Carry flag - Zero flag must be reset
+        case 0x1F: this->do8BitRegisterRotateRight(&(this->af.parts.hi), true); resetBit(&(this->af.parts.lo), ZERO_BIT); return 4; // RRA - 4 cycles
 
         // Jump - (JP nn) - Jump to address nn, immediate two byte value
         case 0xC3: this->programCounter = this->getNextWord(); return 16; // JP nn - 16 cycles
@@ -1248,43 +1251,19 @@ void Cpu::do8BitRegisterAdd(Byte *reg, Byte value, bool useCarry)
     // The Half-Carry flag should be set if we carry from bit 3
     // The Carry flag should be set if we carry from but 7
 
-    int result = *reg + value;
-    if (useCarry && isBitSet(this->af.parts.lo, CARRY_BIT))
-    {
-        result++;
-    }
+    int carry = useCarry && isBitSet(this->af.parts.lo, CARRY_BIT) ? 1 : 0;
+    int result = *reg + value + carry;
 
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
-
-    if ((Byte) (result & 0xFF) == 0)
-    {
-        setBit(&(this->af.parts.lo), ZERO_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), ZERO_BIT);
-    }
-
-
-    if (result > 0xFF)
-    {
-        setBit(&(this->af.parts.lo), CARRY_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), CARRY_BIT);
-    }
+    resetBit(&(this->af.parts.lo), ZERO_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
     Word lowerNibble = *reg & 0xF;
-    if (lowerNibble + (value & 0xF) > 0xF)
-    {
-        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
 
+    if (((Byte) (result & 0xFF)) == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    if (result > 0xFF) setBit(&(this->af.parts.lo), CARRY_BIT);
+    if ((lowerNibble + ((Word) (value & 0xF)) + carry) > 0xF) setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
     *reg = (Byte) (result & 0xFF);
 }
@@ -1297,31 +1276,21 @@ void Cpu::do16BitRegisterAdd(Word *reg, Byte value)
     // THe Subtract flag should be reset
     // The Half-Carry flag should be set if we carry from bit 11
     // The Carry flag should be set if we carry from but 15
-
-    int result = *reg + value;
+    *reg += value;
     resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
-    if (result > 0xFFFF)
+    if ((((unsigned long) *reg) + ((unsigned long) value)) & 0x10000)
     {
         setBit(&(this->af.parts.lo), CARRY_BIT);
     }
-    else
-    {
-        resetBit(&(this->af.parts.lo), CARRY_BIT);
-    }
-
 
     Word lowerTwelve = *reg & 0xFFF;
-    if (lowerTwelve + (value & 0xFFF) > 0xFFF)
+    if ((lowerTwelve + (value & 0xFFF)) & 0x1000)
     {
         setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
     }
-    else
-    {
-        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
-
-    *reg = (Word) (result & 0xFFFF);
 }
 
 void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
@@ -1332,47 +1301,21 @@ void Cpu::do8BitRegisterSub(Byte *reg, Byte value, bool useCarry)
     // THe Subtract flag should be set
     // The Half-Carry flag should be set if we do not borrow from bit 4
     // The Carry flag should be set if we do not borrow
-
-    Byte toSubtract = value;
-    if (useCarry && isBitSet(this->af.parts.lo, CARRY_BIT))
-    {
-        toSubtract--;
-    }
+    int carry = useCarry && isBitSet(this->af.parts.lo, CARRY_BIT) ? 1 : 0;
+    int result = *reg - value - carry;
 
     setBit(&(this->af.parts.lo), SUBTRACT_BIT);
+    resetBit(&(this->af.parts.lo), ZERO_BIT);
+    resetBit(&(this->af.parts.lo), CARRY_BIT);
+    resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
-    if (*reg - toSubtract == 0)
-    {
-        setBit(&(this->af.parts.lo), ZERO_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), ZERO_BIT);
-    }
+    Word lowerNibble = *reg & 0xF;
 
+    if ((Byte) (result) == 0) setBit(&(this->af.parts.lo), ZERO_BIT);
+    if (*reg < value + carry) setBit(&(this->af.parts.lo), CARRY_BIT);
+    if (lowerNibble < (value & 0xF) + carry) setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
-    if (*reg < toSubtract)
-    {
-        setBit(&(this->af.parts.lo), CARRY_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), CARRY_BIT);
-    }
-
-
-    SignedWord lowerNibble = *reg & 0xF;
-    if (lowerNibble - (toSubtract & 0xF) < 0)
-    {
-        setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
-    else
-    {
-        resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-    }
-
-
-    *reg = (Byte) ((*reg - toSubtract) & 0xFF);
+    *reg = (Byte) (result & 0xFF);
 }
 
 void Cpu::do8BitRegisterAnd(Byte *reg, Byte value)
