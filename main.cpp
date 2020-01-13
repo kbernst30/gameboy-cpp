@@ -67,7 +67,7 @@ int main()
     // in memoery at a given time so store the ROM memory separately
     Byte cartridge[CARTRIDGE_SIZE];
     memset(cartridge, 0, sizeof(cartridge));
-    loadGame(cartridge, "rom/cpu_instrs/individual/05-op rp.gb");
+    loadGame(cartridge, "rom/cpu_instrs/cpu_instrs.gb");
 
     // This is just a debug loop to see if data was loaded into
     // memory correctly - print out some instructions (start where PC would be)

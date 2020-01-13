@@ -105,20 +105,15 @@ Byte Mmu::readMemory(Word address)
 
 void Mmu::writeMemory(Word address, Byte data)
 {
-    if (address == 0x9800)
-    {
-        printf("WRITING 0x9800 - 0x%.2x\n", data);
-    }
-
     // Debug
-    if (address == 0xFF02)
-    {
-		// printf("0x%.2x\n", data);
-        if (data == 0x81)
-        {
-            cout << this->memory[0xFF01];
-        }
-	}
+    // if (address == 0xFF02)
+    // {
+	// 	// printf("0x%.2x\n", data);
+    //     if (data == 0x81)
+    //     {
+    //         cout << this->memory[0xFF01];
+    //     }
+	// }
 
     // We cannot write to memory 0x0000 - 0x7FFF
     // As this is read only game data

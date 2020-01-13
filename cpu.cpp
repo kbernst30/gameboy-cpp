@@ -466,30 +466,16 @@ int Cpu::doOpcode(Byte opcode)
         case 0xE8:
         {
             SignedByte offset = (SignedByte) this->getNextByte();
+            unsigned long temp = (unsigned long) this->stackPointer.reg;
             this->stackPointer.reg += offset;
 
             resetBit(&(this->af.parts.lo), ZERO_BIT);
             resetBit(&(this->af.parts.lo), SUBTRACT_BIT);
+            resetBit(&(this->af.parts.lo), CARRY_BIT);
+            resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
-            // If we are overflowing the max for a Word (0xFFFF) then set carry bit, otherwise reset
-            if ((this->stackPointer.reg & 0xFF) + (offset & 0xFF) > 0xFF)
-            {
-                setBit(&(this->af.parts.lo), CARRY_BIT);
-            }
-            else
-            {
-                resetBit(&(this->af.parts.lo), CARRY_BIT);
-            }
-
-            // If we are overflowing lower nibble to upper nibble, then set half carry flag, otherwise reset
-            if ((this->stackPointer.reg & 0xF) + (offset & 0xF) > 0xF)
-            {
-                setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-            }
-            else
-            {
-                resetBit(&(this->af.parts.lo), HALF_CARRY_BIT);
-            }
+            if (((temp & 0xFF) + (offset & 0xFF)) > 0xFF) setBit(&(this->af.parts.lo), CARRY_BIT);
+            if (((temp & 0xF) + (offset & 0xF)) > 0xF) setBit(&(this->af.parts.lo), HALF_CARRY_BIT);
 
             return 16;
         }
