@@ -20,15 +20,15 @@ int Cpu::execute()
 
     // printf("A: 0x%.2x B: 0x%.2x C: 0x%.2x D: 0x%.2x\n E: 0x%.2x F: 0x%.2x: H: 0x%.2x L: 0x%.2x\n", this->af.parts.hi, this->bc.parts.hi, this->bc.parts.lo, this->de.parts.hi, this->de.parts.lo, this->af.parts.lo, this->hl.parts.hi, this->hl.parts.lo);
 
-    // if (this->programCounter == 0xc920)
-    // {
-        // printf("");
-    // }
-
     if (!this->halted)
     {
         Byte opcode = this->mmu->readMemory(this->programCounter);
         // printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
+
+        // if (this->programCounter == 0x50)
+        // {
+        //     printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
+        // }
 
         // if (opcode == 0xDE)
         // {
@@ -572,7 +572,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0x76: this->halted = true; return 4; // HALT - 4 cycles
 
         // Misc - (STOP) - Halt CPU and LCD until button pressed
-        case 0x10: return 4; // STOP - 4 cycles - // TODO should I halt here or use different flag?
+        case 0x10: this->programCounter++; return 4; // STOP - 4 cycles - // TODO should I halt here or use different flag?
 
         // Misc - (DI) - Disable interrupts after the NEXT instruction
         case 0xF3: this->willDisableInterrupts = true; return 4; // DI - 4 cycles
@@ -737,7 +737,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x33: this->do8BitRegisterSwap(&(this->de.parts.lo)); return 8; // SWAP E - 8 cycles
         case 0x34: this->do8BitRegisterSwap(&(this->hl.parts.hi)); return 8; // SWAP H - 8 cycles
         case 0x35: this->do8BitRegisterSwap(&(this->hl.parts.lo)); return 8; // SWAP L - 8 cycles
-        // INC (HL) - 12 cycles
+        // SWAP (HL) - 16 cycles
         case 0x36:
         {
             Byte temp = this->mmu->readMemory(this->hl.reg);
@@ -872,7 +872,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x43: this->doTestBit(this->de.parts.lo, 0);                   return 8;  // BIT 0, E - 8 cycles
         case 0x44: this->doTestBit(this->hl.parts.hi, 0);                   return 8;  // BIT 0, H - 8 cycles
         case 0x45: this->doTestBit(this->hl.parts.lo, 0);                   return 8;  // BIT 0, L - 8 cycles
-        case 0x46: this->doTestBit(this->mmu->readMemory(this->hl.reg), 0); return 16; // BIT 0, (HL) - 8 cycles
+        case 0x46: this->doTestBit(this->mmu->readMemory(this->hl.reg), 0); return 12; // BIT 0, (HL) - 8 cycles
         case 0x47: this->doTestBit(this->af.parts.hi, 0);                   return 8;  // BIT 0, A - 8 cycles
         case 0x48: this->doTestBit(this->bc.parts.hi, 1);                   return 8;  // BIT 1, B - 8 cycles
         case 0x49: this->doTestBit(this->bc.parts.lo, 1);                   return 8;  // BIT 1, C - 8 cycles
@@ -880,7 +880,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x4B: this->doTestBit(this->de.parts.lo, 1);                   return 8;  // BIT 1, E - 8 cycles
         case 0x4C: this->doTestBit(this->hl.parts.hi, 1);                   return 8;  // BIT 1, H - 8 cycles
         case 0x4D: this->doTestBit(this->hl.parts.lo, 1);                   return 8;  // BIT 1, L - 8 cycles
-        case 0x4E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 1); return 16; // BIT 1, (HL) - 8 cycles
+        case 0x4E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 1); return 12; // BIT 1, (HL) - 8 cycles
         case 0x4F: this->doTestBit(this->af.parts.hi, 1);                   return 8;  // BIT 1, A - 8 cycles
         case 0x50: this->doTestBit(this->bc.parts.hi, 2);                   return 8;  // BIT 2, B - 8 cycles
         case 0x51: this->doTestBit(this->bc.parts.lo, 2);                   return 8;  // BIT 2, C - 8 cycles
@@ -888,7 +888,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x53: this->doTestBit(this->de.parts.lo, 2);                   return 8;  // BIT 2, E - 8 cycles
         case 0x54: this->doTestBit(this->hl.parts.hi, 2);                   return 8;  // BIT 2, H - 8 cycles
         case 0x55: this->doTestBit(this->hl.parts.lo, 2);                   return 8;  // BIT 2, L - 8 cycles
-        case 0x56: this->doTestBit(this->mmu->readMemory(this->hl.reg), 2); return 16; // BIT 2, (HL) - 8 cycles
+        case 0x56: this->doTestBit(this->mmu->readMemory(this->hl.reg), 2); return 12; // BIT 2, (HL) - 8 cycles
         case 0x57: this->doTestBit(this->af.parts.hi, 2);                   return 8;  // BIT 2, A - 8 cycles
         case 0x58: this->doTestBit(this->bc.parts.hi, 3);                   return 8;  // BIT 3, B - 8 cycles
         case 0x59: this->doTestBit(this->bc.parts.lo, 3);                   return 8;  // BIT 3, C - 8 cycles
@@ -896,7 +896,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x5B: this->doTestBit(this->de.parts.lo, 3);                   return 8;  // BIT 3, E - 8 cycles
         case 0x5C: this->doTestBit(this->hl.parts.hi, 3);                   return 8;  // BIT 3, H - 8 cycles
         case 0x5D: this->doTestBit(this->hl.parts.lo, 3);                   return 8;  // BIT 3, L - 8 cycles
-        case 0x5E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 3); return 16; // BIT 3, (HL) - 8 cycles
+        case 0x5E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 3); return 12; // BIT 3, (HL) - 8 cycles
         case 0x5F: this->doTestBit(this->af.parts.hi, 3);                   return 8;  // BIT 3, A - 8 cycles
         case 0x60: this->doTestBit(this->bc.parts.hi, 4);                   return 8;  // BIT 4, B - 8 cycles
         case 0x61: this->doTestBit(this->bc.parts.lo, 4);                   return 8;  // BIT 4, C - 8 cycles
@@ -904,7 +904,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x63: this->doTestBit(this->de.parts.lo, 4);                   return 8;  // BIT 4, E - 8 cycles
         case 0x64: this->doTestBit(this->hl.parts.hi, 4);                   return 8;  // BIT 4, H - 8 cycles
         case 0x65: this->doTestBit(this->hl.parts.lo, 4);                   return 8;  // BIT 4, L - 8 cycles
-        case 0x66: this->doTestBit(this->mmu->readMemory(this->hl.reg), 4); return 16; // BIT 4, (HL) - 8 cycles
+        case 0x66: this->doTestBit(this->mmu->readMemory(this->hl.reg), 4); return 12; // BIT 4, (HL) - 8 cycles
         case 0x67: this->doTestBit(this->af.parts.hi, 4);                   return 8;  // BIT 4, A - 8 cycles
         case 0x68: this->doTestBit(this->bc.parts.hi, 5);                   return 8;  // BIT 5, B - 8 cycles
         case 0x69: this->doTestBit(this->bc.parts.lo, 5);                   return 8;  // BIT 5, C - 8 cycles
@@ -912,7 +912,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x6B: this->doTestBit(this->de.parts.lo, 5);                   return 8;  // BIT 5, E - 8 cycles
         case 0x6C: this->doTestBit(this->hl.parts.hi, 5);                   return 8;  // BIT 5, H - 8 cycles
         case 0x6D: this->doTestBit(this->hl.parts.lo, 5);                   return 8;  // BIT 5, L - 8 cycles
-        case 0x6E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 5); return 16; // BIT 5, (HL) - 8 cycles
+        case 0x6E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 5); return 12; // BIT 5, (HL) - 8 cycles
         case 0x6F: this->doTestBit(this->af.parts.hi, 5);                   return 8;  // BIT 5, A - 8 cycles
         case 0x70: this->doTestBit(this->bc.parts.hi, 6);                   return 8;  // BIT 6, B - 8 cycles
         case 0x71: this->doTestBit(this->bc.parts.lo, 6);                   return 8;  // BIT 6, C - 8 cycles
@@ -920,7 +920,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x73: this->doTestBit(this->de.parts.lo, 6);                   return 8;  // BIT 6, E - 8 cycles
         case 0x74: this->doTestBit(this->hl.parts.hi, 6);                   return 8;  // BIT 6, H - 8 cycles
         case 0x75: this->doTestBit(this->hl.parts.lo, 6);                   return 8;  // BIT 6, L - 8 cycles
-        case 0x76: this->doTestBit(this->mmu->readMemory(this->hl.reg), 6); return 16; // BIT 6, (HL) - 8 cycles
+        case 0x76: this->doTestBit(this->mmu->readMemory(this->hl.reg), 6); return 12; // BIT 6, (HL) - 8 cycles
         case 0x77: this->doTestBit(this->af.parts.hi, 6);                   return 8;  // BIT 6, A - 8 cycles
         case 0x78: this->doTestBit(this->bc.parts.hi, 7);                   return 8;  // BIT 7, B - 8 cycles
         case 0x79: this->doTestBit(this->bc.parts.lo, 7);                   return 8;  // BIT 7, C - 8 cycles
@@ -928,7 +928,7 @@ int Cpu::doExtendedOpcode(Byte opcode)
         case 0x7B: this->doTestBit(this->de.parts.lo, 7);                   return 8;  // BIT 7, E - 8 cycles
         case 0x7C: this->doTestBit(this->hl.parts.hi, 7);                   return 8;  // BIT 7, H - 8 cycles
         case 0x7D: this->doTestBit(this->hl.parts.lo, 7);                   return 8;  // BIT 7, L - 8 cycles
-        case 0x7E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 7); return 16; // BIT 7, (HL) - 8 cycles
+        case 0x7E: this->doTestBit(this->mmu->readMemory(this->hl.reg), 7); return 12; // BIT 7, (HL) - 8 cycles
         case 0x7F: this->doTestBit(this->af.parts.hi, 7);                   return 8;  // BIT 7, A - 8 cycles
 
         // Bit - (SET b, r) - Set bit b in register r

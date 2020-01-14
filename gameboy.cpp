@@ -65,28 +65,18 @@ int Gameboy::update() {
     // As soon as we have executed as many cycles as we can for the frame, we can
     // render the screen
 
+    int instCycles = 0;
     int cycles = 0;
-    int counter = 0;
+
     while (cycles < MAX_CYCLES_PER_FRAME)
     {
-        cycles += this->cpu->execute();
+        instCycles = this->cpu->execute();
+        cycles += instCycles;
 
-        this->updateTimers(cycles);
-        this->updateGraphics(cycles);
+        this->updateTimers(instCycles);
+        this->updateGraphics(instCycles);
         this->doInterrupts();
-
-        // debugCounter++;
-        // if (debugCounter == debugNum)
-        // {
-        //     cout << "Cycles: " << cycles << endl;
-        //     this->cpu->debug();
-        //     debugCounter = 0;
-        // }
-
-        counter += 1;
     }
-
-    // cout << "Cycles: " << cycles << " Counter: " << counter << endl;
 
     // this->display->debug();
     this->renderGame();
@@ -101,29 +91,32 @@ bool Gameboy::isClockEnabled()
     return isBitSet(this->mmu->readMemory(TIMER_CONTROLLER_ADDR), 2);
 }
 
-void Gameboy::setClockFrequency()
+int Gameboy::getClockFrequency()
 {
     // This will get the first two bits of the timer controller address so we can
     // set the correct frequency
     Byte clockFrequency = this->mmu->readMemory(TIMER_CONTROLLER_ADDR) & 0x3;
+    int timerCounter = 0;
 
     // The timer counter should be set to the value of the speed of the clock
     // divided by the frequency - therefore it will hit zero at the correct
     // rate
     switch (clockFrequency)
     {
-        case 0x0: this->timerCounter = CLOCK_SPEED / 4096   ; break;
-        case 0x1: this->timerCounter = CLOCK_SPEED / 262144 ; break;
-        case 0x2: this->timerCounter = CLOCK_SPEED / 65536  ; break;
-        case 0x3: this->timerCounter = CLOCK_SPEED / 16384  ; break;
+        case 0x0: timerCounter = CLOCK_SPEED / 4096   ; break;
+        case 0x1: timerCounter = CLOCK_SPEED / 262144 ; break;
+        case 0x2: timerCounter = CLOCK_SPEED / 65536  ; break;
+        case 0x3: timerCounter = CLOCK_SPEED / 16384  ; break;
     }
+
+    return timerCounter;
 }
 
 void Gameboy::updateDividerCounter(int cycles)
 {
     // Incrememt the counter by number of cycles
     this->dividerCounter += cycles;
-    if (this->dividerCounter >= 255)
+    if (this->dividerCounter >= 256)
     {
         // If we go over 255, reset to 0 and then increase the value of the divider register
         this->dividerCounter = 0;
@@ -138,37 +131,40 @@ void Gameboy::updateTimers(int cycles)
     // Before updating timers, we should check if the frequency just changed in
     // memory. If it did, we can reset the timer
     if (this->mmu->isTimerFrequencyChanged()) {
-        this->setClockFrequency();
+        this->timerCounter = 0;
         this->mmu->setTimerFrequencyChanged(false);
     }
 
     // The clock can be disabled so make sure it is enabled before updating anything
     if (isClockEnabled())
     {
-        // Update based on how many cycles passed
-        // The timer increments when this hits 0 as that is based on the
-        // frequency in which the timer should increment (i.e. 4096hz)
-        this->timerCounter -= cycles;
-
         // If enough cycles have passed, we can update the timer
-        if (this->timerCounter <= 0)
-        {
-            // We need to reset the counter value so timer can increment again at the
-            // correct frequency
-            this->setClockFrequency();
+        int threshold = this->getClockFrequency();
+        // for (int i = 0; i < cycles; i++)
+        // {
+            // Update based on how many cycles passed
+            // The timer increments when this hits 0 as that is based on the
+            // frequency in which the timer should increment (i.e. 4096hz)
+            this->timerCounter += cycles;
 
-            // We need to account for overflow - if overflow then we can write the value
-            // that is held in the modulator addr and request Timer Interrupt which is
-            // bit 2 of the interrupt register in memory
-            // Otherwise we can just increment the timer
-            Byte currentTimerValue = this->mmu->readMemory(TIMER_ADDR);
-            if (currentTimerValue == 255) {
-                this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_MODULATOR_ADDR));
-                this->cpu->requestInterrupt(2);
-            } else {
-                this->mmu->writeMemory(TIMER_ADDR, currentTimerValue + 1);
+            while (this->timerCounter >= threshold)
+            {
+                // cout << this->timerCounter << " " << cycles << endl;
+                // We need to reset the counter value so timer can increment again at the
+                // correct frequency
+                this->timerCounter -= threshold;
+
+                // We need to account for overflow - if overflow then we can write the value
+                // that is held in the modulator addr and request Timer Interrupt which is
+                // bit 2 of the interrupt register in memory
+                // Otherwise we can just increment the timer
+                this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_ADDR) + 1);
+                if (this->mmu->readMemory(TIMER_ADDR) == 0) {
+                    this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_MODULATOR_ADDR));
+                    this->cpu->requestInterrupt(2);
+                }
             }
-        }
+        // }
     }
 }
 
@@ -180,6 +176,7 @@ void Gameboy::doInterrupts()
     {
         // If we have any interrupts pending, check if they are enabled
         Byte enabledInterrupts = this->mmu->readMemory(INTERRUPT_ENABLED_REGISTER);
+        // printf("PENDING: 0x%.2x ENABLED: 0x%.2x\n", pendingInterrupts, enabledInterrupts);
         for (int i = 0; i < 5; i++)
         {
             // This loop will ensure we can test every bit that an interrupt can be, in order of priority

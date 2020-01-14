@@ -23,12 +23,13 @@ class Gameboy {
         SDL_Window *window;
         SDL_Renderer *renderer;
 
-        int timerCounter = 1024; // initial value, frequency 4096 (4194304/4096)
+        // int timerCounter = 1024; // initial value, frequency 4096 (4194304/4096)
+        int timerCounter = 0;
         int dividerCounter = 0; // Counts up to 255
         int scanlineCounter = 456; // It takes 456 clock cycles to draw one scanline
 
         bool isClockEnabled();
-        void setClockFrequency();
+        int getClockFrequency();
         void updateDividerCounter(int cycles);
 
         int update();

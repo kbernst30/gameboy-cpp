@@ -73,6 +73,9 @@ void Mmu::reset()
     this->memory[0xFF4B] = 0x00;
     this->memory[0xFFFF] = 0x00;
 
+    // THIS IS A TEMPORARY HACK FOR INPUT AS WE HAVE YET TO IMPLEMENT JOYPAD
+    this->memory[JOYPAD_REGISTER_ADDR] = 0x2F; // This will set all inputs to unpressed - might be necessary to avoid reset loops for games like Tetris
+
     this->currentRomBank = 1;
     this->currentRamBank = 0;
 
@@ -114,6 +117,12 @@ void Mmu::writeMemory(Word address, Byte data)
     //         cout << this->memory[0xFF01];
     //     }
 	// }
+
+    if (address == JOYPAD_REGISTER_ADDR)
+    {
+        // printf("WRITING 0x%.4x: 0x%.2x 0x%.2x\n", address, data, this->memory[address]);
+        return;
+    }
 
     // We cannot write to memory 0x0000 - 0x7FFF
     // As this is read only game data
