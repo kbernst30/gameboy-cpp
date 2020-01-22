@@ -128,6 +128,8 @@ void Gameboy::updateTimers(int cycles)
 {
     this->updateDividerCounter(cycles);
 
+    int threshold = this->getClockFrequency();
+
     // Before updating timers, we should check if the frequency just changed in
     // memory. If it did, we can reset the timer
     if (this->mmu->isTimerFrequencyChanged()) {
@@ -139,32 +141,31 @@ void Gameboy::updateTimers(int cycles)
     if (isClockEnabled())
     {
         // If enough cycles have passed, we can update the timer
-        int threshold = this->getClockFrequency();
-        // for (int i = 0; i < cycles; i++)
-        // {
-            // Update based on how many cycles passed
-            // The timer increments when this hits 0 as that is based on the
-            // frequency in which the timer should increment (i.e. 4096hz)
-            this->timerCounter += cycles;
+        // Update based on how many cycles passed
+        // The timer increments when this hits 0 as that is based on the
+        // frequency in which the timer should increment (i.e. 4096hz)
+        this->timerCounter += cycles;
 
-            while (this->timerCounter >= threshold)
-            {
-                // cout << this->timerCounter << " " << cycles << endl;
-                // We need to reset the counter value so timer can increment again at the
-                // correct frequency
-                this->timerCounter -= threshold;
+        if (this->timerCounter >= threshold)
+        {
+            // cout << this->timerCounter << " " << cycles << endl;
+            // We need to reset the counter value so timer can increment again at the
+            // correct frequency
+            this->timerCounter -= threshold;
+            // this->timerCounter = 0;
 
-                // We need to account for overflow - if overflow then we can write the value
-                // that is held in the modulator addr and request Timer Interrupt which is
-                // bit 2 of the interrupt register in memory
-                // Otherwise we can just increment the timer
-                this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_ADDR) + 1);
-                if (this->mmu->readMemory(TIMER_ADDR) == 0) {
-                    this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_MODULATOR_ADDR));
-                    this->cpu->requestInterrupt(2);
-                }
+            // We need to account for overflow - if overflow then we can write the value
+            // that is held in the modulator addr and request Timer Interrupt which is
+            // bit 2 of the interrupt register in memory
+            // Otherwise we can just increment the timer
+            this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_ADDR) + 1);
+            // printf("0x%.2x\n", this->mmu->readMemory(TIMER_ADDR));
+            if (this->mmu->readMemory(TIMER_ADDR) == 0) {
+                // printf("0x%.2x\n", this->mmu->readMemory(TIMER_MODULATOR_ADDR));
+                this->mmu->writeMemory(TIMER_ADDR, this->mmu->readMemory(TIMER_MODULATOR_ADDR));
+                this->cpu->requestInterrupt(2);
             }
-        // }
+        }
     }
 }
 

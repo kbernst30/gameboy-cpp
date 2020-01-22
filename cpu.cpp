@@ -14,6 +14,8 @@ void Cpu::debug()
     printf("PC: 0x%.4x\n", this->programCounter);
 }
 
+Byte lastOpcode = 0;
+
 int Cpu::execute()
 {
     int cycles;
@@ -25,11 +27,6 @@ int Cpu::execute()
         Byte opcode = this->mmu->readMemory(this->programCounter);
         // printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
 
-        // if (this->programCounter == 0x50)
-        // {
-        //     printf("OPCODE: 0x%.2x PC: 0x%.4x SP: 0x%.4x\n", opcode, this->programCounter, this->stackPointer.reg);
-        // }
-
         // if (opcode == 0xDE)
         // {
         //     printf("");
@@ -37,6 +34,7 @@ int Cpu::execute()
 
         this->programCounter++;
         cycles = this->doOpcode(opcode);
+        lastOpcode = opcode;
     }
     else
     {
@@ -47,7 +45,7 @@ int Cpu::execute()
     // We need to see based on pending flags if we should enable/disable
     // interrupts. This should only happen if the instruction before the
     // last one executed was DI (0xF3) or EI (0xFB)
-    Byte lastOpcode = this->mmu->readMemory(this->programCounter - 2);
+    // Byte lastOpcode = this->mmu->readMemory(this->programCounter - 2);
     if (lastOpcode == 0xF3 && this->willDisableInterrupts)
     {
         this->willDisableInterrupts = false;
@@ -277,7 +275,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0x31: this->do16BitLoad(&(this->stackPointer.reg)); return 12; // LD BC, nn - 12 cycles
 
         // 16 Bit Load - (LD SP, HL) - Load HL into the Stack Pointer
-        case 0xF9: this->stackPointer = this->hl; return 8; // LD SP, HL - 8 cycles
+        case 0xF9: this->stackPointer.reg = this->hl.reg; return 8; // LD SP, HL - 8 cycles
 
         // 16 Bit Load - (LD HL SP+n) - Load Stack pointer plus one byte signed immediate value into HL - 12 cycles
         // Reset Z flag, Reset N flag, Set/reset H flag, set or reset C flag
@@ -578,7 +576,7 @@ int Cpu::doOpcode(Byte opcode)
         case 0xF3: this->willDisableInterrupts = true; return 4; // DI - 4 cycles
 
         // Misc - (EI) - Enable interrupts after the NEXT instruction
-        case 0xFB: this->willEnableInterrupts = true; return 4; // DI - 4 cycles
+        case 0xFB: this->willEnableInterrupts = true; return 4; // EI - 4 cycles
 
         // Rotate - (RLCA) - Rotate A left, Bit 7 to Carry flag - Zero flag must be reset
         case 0x07: this->do8BitRegisterRotateLeft(&(this->af.parts.hi)); resetBit(&(this->af.parts.lo), ZERO_BIT); return 4; // RLCA - 4 cycles
